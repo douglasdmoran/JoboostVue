@@ -1,0 +1,19 @@
+# Dependencias de Node (Cubre tanto Front como Back sin importar la subcarpeta)
+node_modules/
+
+# Variables de entorno y credenciales
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Archivos de log de npm/yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Carpetas de compilación (Recomendado para React/Express)
+dist/
+build/
+.next/
