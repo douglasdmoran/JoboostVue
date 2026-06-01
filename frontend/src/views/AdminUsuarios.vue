@@ -29,19 +29,19 @@
               <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">ID</th>
               <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">Nombre</th>
               <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">Correo</th>
-              <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">Documento</th>
+              <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">Rol</th>
               <th style="padding: 20px; font-size: 0.8rem; color: #333; font-weight: bold; text-transform: uppercase;">Acciones</th>
             </tr>
           </thead>
           <tbody style="color: #666; font-size: 0.85rem;">
-            <tr v-for="usuario in listaUsuarios" :key="usuario.id" style="border-bottom: 1px solid #eee;">
-              <td style="padding: 15px 20px;">{{ usuario.id }}</td>
+            <tr v-for="usuario in listaUsuarios" :key="usuario.id_usuario" style="border-bottom: 1px solid #eee;">
+              <td style="padding: 15px 20px;">{{ usuario.id_usuario }}</td>
               <td style="padding: 15px 20px;">{{ usuario.nombre }}</td>
-              <td style="padding: 15px 20px;">{{ usuario.email }}</td>
-              <td style="padding: 15px 20px;">{{ usuario.documento }}</td>
+              <td style="padding: 15px 20px;">{{ usuario.correo }}</td>
+              <td style="padding: 15px 20px; text-transform: capitalize;">{{ usuario.rol }}</td>
               <td style="padding: 15px 20px;">
-                <button style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
-                <button style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
+                <button @click="abrirEditar(usuario)" style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
+                <button @click="eliminarUsuario(usuario.id_usuario)" style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
               </td>
             </tr>
             <tr v-if="listaUsuarios.length === 0">
@@ -78,11 +78,6 @@
             </select>
           </div>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">Documento</label>
-            <input type="text" v-model="formulario.documento" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-          </div>
-          
           <div style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">Contraseña</label>
             <input type="password" v-model="formulario.password" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
@@ -101,50 +96,121 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
-// 1. Control de visualización del Modal
 const mostrarModal = ref(false)
+const editandoId = ref(null)
 
 const abrirModal = () => {
+  editandoId.value = null
+  mostrarModal.value = true
+}
+
+const abrirEditar = (usuario) => {
+  editandoId.value = usuario.id_usuario
+  formulario.nombre = usuario.nombre
+  formulario.email = usuario.correo
+  formulario.rol = usuario.rol
+  formulario.password = ''
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
-  // Limpiamos los campos del formulario
+  editandoId.value = null
   formulario.nombre = ''
   formulario.email = ''
-  formulario.rol = 'postulante' // Valor por defecto
-  formulario.documento = ''
+  formulario.rol = 'postulante'
   formulario.password = ''
 }
 
-// 2. Estado reactivo para los datos del formulario
 const formulario = reactive({
   nombre: '',
   email: '',
-  rol: 'postulante', // Inicializado con el primer option
-  documento: '',
+  rol: 'postulante',
   password: ''
 })
 
-// 3. Arreglo reactivo para simular los usuarios de la base de datos
-const listaUsuarios = ref([
-  { id: 1, nombre: 'Ana López', email: 'ana@example.com', rol: 'postulante', documento: '05489721-5' },
-  { id: 2, nombre: 'Carlos Ruiz', email: 'cruiz@empresa.com', rol: 'empresa', documento: '03158962-1' }
-])
+const listaUsuarios = ref([])
 
-// 4. Funciones
-const guardarUsuario = () => {
-  console.log('Datos del usuario a guardar:', formulario)
-  // Aquí se implementará la llamada a tu API (ej. Axios a tu backend Node.js)
-  
-  cerrarModal()
+// Cargar usuarios al montar la vista
+const cargarUsuarios = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/users')
+    if (response.ok) {
+      listaUsuarios.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar usuarios:', err)
+  }
 }
 
-const cerrarSesion = () => {
-  console.log('Cerrando sesión...')
+onMounted(() => {
+  cargarUsuarios()
+})
+
+const guardarUsuario = async () => {
+  try {
+    const isEdit = editandoId.value !== null
+    const url = isEdit 
+      ? `http://localhost:3000/users/${editandoId.value}`
+      : 'http://localhost:3000/users'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    const bodyData = {
+      nombre: formulario.nombre,
+      email: formulario.email,
+      rol: formulario.rol
+    }
+
+    if (formulario.password) {
+      bodyData.contrasenia = formulario.password
+    } else if (!isEdit) {
+      // Si es creación, la contraseña es obligatoria. Asignamos una por defecto si no se digita
+      bodyData.contrasenia = '123456'
+    }
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bodyData)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al guardar usuario')
+    }
+
+    alert(isEdit ? '¡Usuario actualizado con éxito!' : '¡Usuario creado con éxito!')
+    cerrarModal()
+    cargarUsuarios()
+  } catch (err) {
+    alert('Error al guardar usuario: ' + err.message)
+  }
+}
+
+const eliminarUsuario = async (id) => {
+  if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) return
+
+  try {
+    const response = await fetch(`http://localhost:3000/users/${id}`, {
+      method: 'DELETE'
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar usuario')
+    }
+
+    alert('Usuario eliminado correctamente')
+    cargarUsuarios()
+  } catch (err) {
+    alert('Error al eliminar usuario: ' + err.message)
+  }
 }
 </script>
 

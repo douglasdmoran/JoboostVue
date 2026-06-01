@@ -1,7 +1,12 @@
 import { pool } from '../db.js';
 
 export const getAllVacantes = async () => {
-    const result = await pool.query('SELECT * FROM vacantes');
+    const result = await pool.query(`
+        SELECT v.*, e.nombre as empresa_nombre 
+        FROM vacantes v
+        LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
+        ORDER BY v.fecha_publicacion DESC
+    `);
     return result.rows;
 };
 

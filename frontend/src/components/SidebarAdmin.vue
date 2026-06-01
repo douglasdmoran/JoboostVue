@@ -6,6 +6,16 @@
       </router-link>
     </div>
 
+    <div v-if="usuario" style="padding: 0 20px 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+      <div style="background: #e0f2fe; color: #0033ff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; border: 1px solid #0033ff;">
+        {{ usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'A' }}
+      </div>
+      <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <span style="display: block; font-weight: bold; font-size: 0.85rem; color: #333;">{{ usuario.nombre }}</span>
+        <span style="display: block; font-size: 0.75rem; color: #888; text-transform: capitalize;">{{ usuario.rol }}</span>
+      </div>
+    </div>
+
     <nav style="flex: 1; padding: 0 20px;">
       <ul style="list-style: none; padding: 0;">
         <li style="margin-bottom: 10px;">
@@ -45,8 +55,22 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const usuario = ref(null)
+
+onMounted(() => {
+  const userJson = localStorage.getItem('usuario')
+  if (userJson) {
+    usuario.value = JSON.parse(userJson)
+  }
+})
+
 const cerrarSesion = () => {
-  console.log('Cerrando sesión...')
+  localStorage.removeItem('usuario')
+  router.push('/')
 }
 </script>
 

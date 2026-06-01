@@ -36,15 +36,42 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 // Estas variables guardarán automáticamente lo que el usuario escriba
 const email = ref('')
 const password = ref('')
 
+const router = useRouter()
+
 // Esta función se ejecuta al hacer clic en "Entrar"
-const iniciarSesion = () => {
-  console.log('Intentando entrar con:', email.value, password.value)
-  // Más adelante, aquí pondremos el código para validar con tu base de datos
+const iniciarSesion = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/users/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.value,
+        contrasenia: password.value
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en credenciales')
+    }
+
+    // Guardamos la información del usuario en localStorage
+    localStorage.setItem('usuario', JSON.stringify(data.usuario))
+    
+    // Redirigir a panel de administración
+    router.push('/admin')
+  } catch (err) {
+    alert('Error al iniciar sesión: ' + err.message)
+  }
 }
 </script>
 

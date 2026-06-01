@@ -24,43 +24,43 @@ export const getUsuarioPorCorreo = async (req, res, next) => {
     }
 };
 
-import { pool } from '../db.js';
-export const postCrearUsuario = async (req, res) => {
+export const postCrearUsuario = async (req, res, next) => {
     try {
-        const { nombre, email, contrasenia, rol: bodyRol, documento } = req.body;
-        const rol = bodyRol || 'postulante';
-
-        // Consulta con los campos de tu tabla: nombre, correo, contrasena, rol, documento
-        const query = `
-            INSERT INTO usuarios (nombre, correo, contrasena, rol, documento) 
-            VALUES ($1, $2, $3, $4, $5) 
-            RETURNING *`;
-        
-        const values = [nombre, email, contrasenia, rol, documento || null];
-
-        // 2. CAMBIO CLAVE: Usa 'pool.query' en lugar de 'db.query'
-        const result = await pool.query(query, values); 
-
+        const { nombre, email, contrasenia, rol } = req.body;
+        const user = await userService.createUser(nombre, email, contrasenia, rol);
         res.status(201).json({
             message: "¡Usuario registrado con éxito!",
-            usuario: result.rows[0]
+            usuario: user
         });
+    } catch (err) {
+        next(err);
+    }
+};
 
-    } catch (error) {
-        // Esto imprimirá el error real si falta alguna columna o algo falla
-        console.error("ERROR DETALLADO:", error.message);
-        res.status(500).json({ 
-            message: "Error en el servidor al crear usuario",
-            error: error.message 
+export const postLoginUsuario = async (req, res, next) => {
+    try {
+        const { email, contrasenia } = req.body;
+        const user = await userService.authenticateUser(email, contrasenia);
+        if (!user) {
+            const error = new Error('Correo o contraseña incorrectos');
+            error.statusCode = 401;
+            throw error;
+        }
+        const { contrasena, ...userWithoutPassword } = user;
+        res.status(200).json({
+            message: "Inicio de sesión exitoso",
+            usuario: userWithoutPassword
         });
+    } catch (err) {
+        next(err);
     }
 };
 
 export const putActualizarUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { nombre, documento, carnet, email, contrasenia, rol } = req.body;
-        const updatedUser = await userService.updateUser(id, nombre, documento, carnet, email, contrasenia, rol);
+        const { nombre, email, contrasenia, rol } = req.body;
+        const updatedUser = await userService.updateUser(id, nombre, email, contrasenia, rol);
         if (!updatedUser) {
             const error = new Error('No se pudo actualizar, usuario no encontrado');
             error.statusCode = 404;

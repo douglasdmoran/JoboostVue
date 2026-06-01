@@ -35,19 +35,19 @@
             </tr>
           </thead>
           <tbody style="color: #666; font-size: 0.9rem;">
-            <tr v-for="foro in listaForos" :key="foro.id" style="border-bottom: 1px solid #eee;">
-              <td style="padding: 15px 20px;">{{ foro.id }}</td>
+            <tr v-for="foro in listaForos" :key="foro.id_foro" style="border-bottom: 1px solid #eee;">
+              <td style="padding: 15px 20px;">{{ foro.id_foro }}</td>
               <td style="padding: 15px 20px;">{{ foro.titulo }}</td>
-              <td style="padding: 15px 20px;">{{ foro.autor }}</td>
-              <td style="padding: 15px 20px;">{{ foro.fecha }}</td>
+              <td style="padding: 15px 20px;">{{ foro.usuario_nombre || 'Desconocido' }}</td>
+              <td style="padding: 15px 20px;">{{ foro.fecha_creacion ? new Date(foro.fecha_creacion).toLocaleDateString() : 'N/A' }}</td>
               <td style="padding: 15px 20px;">
                 <span :style="{ color: foro.cerrado ? 'red' : 'green', fontWeight: 'bold' }">
                   {{ foro.cerrado ? 'Cerrado' : 'Activo' }}
                 </span>
               </td>
               <td style="padding: 15px 20px;">
-                <button style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
-                <button style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
+                <button @click="abrirEditar(foro)" style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
+                <button @click="eliminarForo(foro.id_foro)" style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
               </td>
             </tr>
             <tr v-if="listaForos.length === 0">
@@ -71,10 +71,11 @@
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">Usuario (Autor)</label>
-            <select v-model="formulario.usuario" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+            <select v-model="formulario.id_usuario" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
               <option value="">Seleccione un usuario...</option>
-              <option value="Admin">Admin</option>
-              <option value="Usuario1">Usuario de prueba</option>
+              <option v-for="usuario in listaUsuarios" :key="usuario.id_usuario" :value="usuario.id_usuario">
+                {{ usuario.nombre }} ({{ usuario.rol }})
+              </option>
             </select>
           </div>
           
@@ -101,49 +102,134 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
-// Estado del modal
 const mostrarModal = ref(false)
+const editandoId = ref(null)
 
 const abrirModal = () => {
+  editandoId.value = null
+  formulario.titulo = ''
+  formulario.id_usuario = ''
+  formulario.contenido = ''
+  formulario.cerrado = false
+  mostrarModal.value = true
+}
+
+const abrirEditar = (foro) => {
+  editandoId.value = foro.id_foro
+  formulario.titulo = foro.titulo
+  formulario.id_usuario = foro.id_usuario || ''
+  formulario.contenido = foro.contenido || ''
+  formulario.cerrado = foro.cerrado || false
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
-  // Limpiamos los campos
+  editandoId.value = null
   formulario.titulo = ''
-  formulario.usuario = ''
+  formulario.id_usuario = ''
   formulario.contenido = ''
   formulario.cerrado = false
 }
 
-// Datos del formulario
 const formulario = reactive({
   titulo: '',
-  usuario: '',
+  id_usuario: '',
   contenido: '',
   cerrado: false
 })
 
-// Datos simulados para la tabla
-const listaForos = ref([
-  { id: 1, titulo: 'Dudas sobre entrevistas', autor: 'Admin', fecha: '2024-05-20', cerrado: false },
-  { id: 2, titulo: 'Mejores lenguajes 2024', autor: 'Usuario1', fecha: '2024-05-22', cerrado: true }
-])
+const listaForos = ref([])
+const listaUsuarios = ref([])
 
-// Funciones
-const guardarForo = () => {
-  console.log('Guardando foro:', formulario)
-  // Cuando conectemos tu backend (ya sea con Node.js o PHP) a la base de datos MySQL, 
-  // aquí enviaremos estos datos vía Axios o Fetch.
-  
-  cerrarModal()
+const cargarForos = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/foros')
+    if (response.ok) {
+      listaForos.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar foros:', err)
+  }
 }
 
-const cerrarSesion = () => {
-  console.log('Cerrando sesión...')
+const cargarUsuarios = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/users')
+    if (response.ok) {
+      listaUsuarios.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar usuarios:', err)
+  }
+}
+
+onMounted(() => {
+  cargarForos()
+  cargarUsuarios()
+})
+
+const guardarForo = async () => {
+  try {
+    const isEdit = editandoId.value !== null
+    const url = isEdit 
+      ? `http://localhost:3000/foros/${editandoId.value}`
+      : 'http://localhost:3000/foros'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    const bodyData = {
+      titulo: formulario.titulo,
+      contenido: formulario.contenido,
+      cerrado: formulario.cerrado
+    }
+
+    if (!isEdit) {
+      bodyData.id_usuario = formulario.id_usuario
+    }
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bodyData)
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al guardar foro')
+    }
+
+    alert(isEdit ? '¡Foro actualizado con éxito!' : '¡Foro creado con éxito!')
+    cerrarModal()
+    cargarForos()
+  } catch (err) {
+    alert('Error al guardar foro: ' + err.message)
+  }
+}
+
+const eliminarForo = async (id) => {
+  if (!confirm('¿Estás seguro de que deseas eliminar este foro?')) return
+
+  try {
+    const response = await fetch(`http://localhost:3000/foros/${id}`, {
+      method: 'DELETE'
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar foro')
+    }
+
+    alert('Foro eliminado exitosamente')
+    cargarForos()
+  } catch (err) {
+    alert('Error al eliminar foro: ' + err.message)
+  }
 }
 </script>
 

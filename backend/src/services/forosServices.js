@@ -1,7 +1,12 @@
 import { pool } from '../db.js';
 
 export const getAllForos = async () => {
-    const result = await pool.query('SELECT * FROM foros');
+    const result = await pool.query(`
+        SELECT f.*, u.nombre as usuario_nombre 
+        FROM foros f
+        LEFT JOIN usuarios u ON f.id_usuario = u.id_usuario
+        ORDER BY f.fecha_creacion DESC
+    `);
     return result.rows;
 };
 

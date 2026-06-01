@@ -34,14 +34,14 @@
             </tr>
           </thead>
           <tbody style="color: #666; font-size: 0.85rem;">
-            <tr v-for="empresa in listaEmpresas" :key="empresa.id" style="border-bottom: 1px solid #eee;">
-              <td style="padding: 15px 20px;">{{ empresa.id }}</td>
+            <tr v-for="empresa in listaEmpresas" :key="empresa.id_empresa" style="border-bottom: 1px solid #eee;">
+              <td style="padding: 15px 20px;">{{ empresa.id_empresa }}</td>
               <td style="padding: 15px 20px;">{{ empresa.nombre }}</td>
               <td style="padding: 15px 20px;">{{ empresa.ubicacion }}</td>
-              <td style="padding: 15px 20px;">{{ empresa.sitioWeb }}</td>
+              <td style="padding: 15px 20px;">{{ empresa.sitio_web || 'N/A' }}</td>
               <td style="padding: 15px 20px;">
-                <button style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
-                <button style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
+                <button @click="abrirEditar(empresa)" style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
+                <button @click="eliminarEmpresa(empresa.id_empresa)" style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
               </td>
             </tr>
             <tr v-if="listaEmpresas.length === 0">
@@ -106,50 +106,116 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
-// 1. Control del Modal
 const mostrarModal = ref(false)
+const editandoId = ref(null)
 
 const abrirModal = () => {
+  editandoId.value = null
+  formulario.nombre = ''
+  formulario.ubicacion = ''
+  formulario.sitio_web = ''
+  formulario.descripcion = ''
+  mostrarModal.value = true
+}
+
+const abrirEditar = (empresa) => {
+  editandoId.value = empresa.id_empresa
+  formulario.nombre = empresa.nombre
+  formulario.ubicacion = empresa.ubicacion || ''
+  formulario.sitio_web = empresa.sitio_web || ''
+  formulario.descripcion = empresa.descripcion || ''
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
-  // Limpiamos el formulario al cerrar
+  editandoId.value = null
   formulario.nombre = ''
   formulario.ubicacion = ''
-  formulario.sitioWeb = ''
+  formulario.sitio_web = ''
   formulario.descripcion = ''
 }
 
-// 2. Datos del Formulario
 const formulario = reactive({
   nombre: '',
   ubicacion: '',
-  sitioWeb: '',
+  sitio_web: '',
   descripcion: ''
 })
 
-// 3. Tabla de Empresas (simulando datos de la base de datos)
-const listaEmpresas = ref([
-  // Si dejas este arreglo vacío [], verás el mensaje "No hay empresas registradas"
-  { id: 1, nombre: 'Tech Corp', ubicacion: 'San Salvador', sitioWeb: 'www.techcorp.sv' },
-  { id: 2, nombre: 'Innovatech', ubicacion: 'Santa Ana', sitioWeb: 'www.innovatech.com' }
-])
+const listaEmpresas = ref([])
 
-// 4. Acciones
-const guardarEmpresa = () => {
-  console.log('Datos listos para enviar al backend:', formulario)
-  // Aquí agregaremos la petición a tu API para guardar en MySQL.
-  
-  // Por ahora, solo cerramos el modal simulando éxito
-  cerrarModal()
+const cargarEmpresas = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/empresas')
+    if (response.ok) {
+      listaEmpresas.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar empresas:', err)
+  }
 }
 
-const cerrarSesion = () => {
-  console.log('Cerrando sesión...')
+onMounted(() => {
+  cargarEmpresas()
+})
+
+const guardarEmpresa = async () => {
+  try {
+    const isEdit = editandoId.value !== null
+    const url = isEdit 
+      ? `http://localhost:3000/empresas/${editandoId.value}`
+      : 'http://localhost:3000/empresas'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        nombre: formulario.nombre,
+        ubicacion: formulario.ubicacion,
+        sitio_web: formulario.sitio_web,
+        descripcion: formulario.descripcion
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al guardar empresa')
+    }
+
+    alert(isEdit ? '¡Empresa actualizada con éxito!' : '¡Empresa creada con éxito!')
+    cerrarModal()
+    cargarEmpresas()
+  } catch (err) {
+    alert('Error al guardar empresa: ' + err.message)
+  }
+}
+
+const eliminarEmpresa = async (id) => {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta empresa?')) return
+
+  try {
+    const response = await fetch(`http://localhost:3000/empresas/${id}`, {
+      method: 'DELETE'
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar empresa')
+    }
+
+    alert('Empresa eliminada exitosamente')
+    cargarEmpresas()
+  } catch (err) {
+    alert('Error al eliminar empresa: ' + err.message)
+  }
 }
 </script>
 

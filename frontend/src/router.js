@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // 1. Importamos todas las vistas que creamos
 import Login from './views/Login.vue'
+import Registro from './views/Registro.vue'
 import AdminDash from './views/AdminDash.vue'
 import AdminVacantes from './views/AdminVacantes.vue'
 import AdminForos from './views/AdminForos.vue'
@@ -11,6 +12,7 @@ import AdminUsuarios from './views/AdminUsuarios.vue'
 // 2. Definimos las rutas
 const routes = [
   { path: '/', component: Login }, // La pantalla inicial será el Login
+  { path: '/registro', component: Registro },
   { path: '/admin', component: AdminDash },
   { path: '/admin/vacantes', component: AdminVacantes },
   { path: '/admin/foros', component: AdminForos },

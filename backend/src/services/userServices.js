@@ -11,25 +11,24 @@ export const getUserByCorreo = async (correo) => {
     return result.rows[0];
 };
 
-export const createUser = async (nombre, documento, carnet, email, contrasenia) => {
+export const createUser = async (nombre, email, contrasenia, rol = 'postulante') => {
     const SALT_ROUNDS = 10;
-    const salt = await bcrypt.genSaltSync(SALT_ROUNDS); // Usar genSaltSync para consistencia o await con genSalt
+    const salt = bcrypt.genSaltSync(SALT_ROUNDS);
     const contraseniaHashed = bcrypt.hashSync(contrasenia, salt);
 
-    // Corregido: Una sola declaración de result y usando la contraseña hasheada
     const result = await pool.query(`
-        INSERT INTO usuarios (nombre, documento, carnet, correo, password)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO usuarios (nombre, correo, contrasena, rol, fecha_registro)
+        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
         RETURNING *
-    `, [nombre, documento, carnet, email, contraseniaHashed]);
+    `, [nombre, email, contraseniaHashed, rol]);
     
     return result.rows[0];
 };
 
-export const updateUser = async (id, nombre, documento, carnet, email, contrasenia, rol) => {
-    let query = `UPDATE usuarios SET nombre = $1, correo = $2, documento = $3`;
-    let values = [nombre, email, documento || null];
-    let paramIndex = 4;
+export const updateUser = async (id, nombre, email, contrasenia, rol) => {
+    let query = `UPDATE usuarios SET nombre = $1, correo = $2`;
+    let values = [nombre, email];
+    let paramIndex = 3;
 
     if (rol) {
         query += `, rol = $${paramIndex}`;
@@ -41,7 +40,6 @@ export const updateUser = async (id, nombre, documento, carnet, email, contrasen
         const SALT_ROUNDS = 10;
         const salt = bcrypt.genSaltSync(SALT_ROUNDS);
         const contraseniaHashed = bcrypt.hashSync(contrasenia, salt);
-        // Sometimes password column is used, sometimes contrasena, let's update both just in case or just stick to contrasena
         query += `, contrasena = $${paramIndex}`;
         values.push(contraseniaHashed);
         paramIndex++;
@@ -57,4 +55,31 @@ export const updateUser = async (id, nombre, documento, carnet, email, contrasen
 export const deleteUser = async (id) => {
     const result = await pool.query('DELETE FROM usuarios WHERE id_usuario = $1 RETURNING *', [id]);
     return result.rows[0];
+};
+
+export const authenticateUser = async (email, contrasenia) => {
+    const user = await getUserByCorreo(email);
+    if (!user) return null;
+
+    let match = false;
+    const dbPass = user.contrasena || '';
+
+    // Si parece un hash bcrypt, comparar con bcrypt
+    if (dbPass.startsWith('$2a$') || dbPass.startsWith('$2b$') || dbPass.startsWith('$2y$')) {
+        try {
+            match = bcrypt.compareSync(contrasenia, dbPass);
+        } catch (e) {
+            match = false;
+        }
+    } else {
+        // Fallback para contraseñas históricas/heredadas en texto plano
+        match = contrasenia === dbPass;
+    }
+
+    if (!match) return null;
+
+    // Actualizar fecha de último acceso
+    await pool.query('UPDATE usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id_usuario = $1', [user.id_usuario]);
+
+    return user;
 };

@@ -70,19 +70,37 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-// Estas variables manejarán los datos del dashboard. 
-// Por ahora inician en 0, luego los conectaremos a tu backend.
 const totalUsuarios = ref(0)
 const totalEmpresas = ref(0)
 const totalForos = ref(0)
 
-// Función para manejar el cierre de sesión
-const cerrarSesion = () => {
-  console.log('Cerrando sesión de administrador...')
-  // Aquí agregaremos la lógica para limpiar el token y redirigir al login
-}
+onMounted(async () => {
+  try {
+    // Consultamos en paralelo los endpoints para obtener los conteos reales
+    const [resUsers, resEmpresas, resForos] = await Promise.all([
+      fetch('http://localhost:3000/users'),
+      fetch('http://localhost:3000/empresas'),
+      fetch('http://localhost:3000/foros')
+    ])
+
+    if (resUsers.ok) {
+      const users = await resUsers.json()
+      totalUsuarios.value = users.length
+    }
+    if (resEmpresas.ok) {
+      const empresas = await resEmpresas.json()
+      totalEmpresas.value = empresas.length
+    }
+    if (resForos.ok) {
+      const foros = await resForos.json()
+      totalForos.value = foros.length
+    }
+  } catch (err) {
+    console.error('Error al cargar estadísticas del dashboard:', err)
+  }
+})
 </script>
 
 <style scoped>

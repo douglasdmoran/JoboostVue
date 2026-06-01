@@ -9,6 +9,7 @@ router.get('/correo/:correo', userController.getUsuarioPorCorreo);
 
 
 router.post('/', runValidations(createUserValidator()), userController.postCrearUsuario);
+router.post('/login', userController.postLoginUsuario);
 
 router.put('/:id', userController.putActualizarUsuario);
 router.delete('/:id', userController.deleteEliminarUsuario);

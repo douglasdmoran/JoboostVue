@@ -34,14 +34,14 @@
             </tr>
           </thead>
           <tbody style="color: #666; font-size: 0.9rem;">
-            <tr v-for="vacante in listaVacantes" :key="vacante.id" style="border-bottom: 1px solid #eee;">
-              <td style="padding: 15px 20px;">{{ vacante.id }}</td>
+            <tr v-for="vacante in listaVacantes" :key="vacante.id_vacante" style="border-bottom: 1px solid #eee;">
+              <td style="padding: 15px 20px;">{{ vacante.id_vacante }}</td>
               <td style="padding: 15px 20px;">{{ vacante.titulo }}</td>
-              <td style="padding: 15px 20px;">{{ vacante.empresa }}</td>
-              <td style="padding: 15px 20px;">{{ vacante.fecha }}</td>
+              <td style="padding: 15px 20px;">{{ vacante.empresa_nombre || 'N/A' }}</td>
+              <td style="padding: 15px 20px;">{{ vacante.fecha_publicacion ? new Date(vacante.fecha_publicacion).toLocaleDateString() : 'N/A' }}</td>
               <td style="padding: 15px 20px;">
-                <button style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
-                <button style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
+                <button @click="abrirEditar(vacante)" style="margin-right: 10px; color: #0033ff; background: none; border: none; cursor: pointer;">Editar</button>
+                <button @click="eliminarVacante(vacante.id_vacante)" style="color: red; background: none; border: none; cursor: pointer;">Eliminar</button>
               </td>
             </tr>
             <tr v-if="listaVacantes.length === 0">
@@ -65,10 +65,11 @@
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px; color: #666; font-size: 0.9rem;">Empresa</label>
-            <select v-model="formulario.empresa" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+            <select v-model="formulario.id_empresa" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
               <option value="">Seleccione una empresa...</option>
-              <option value="Tech Corp">Tech Corp</option>
-              <option value="Innovatech">Innovatech</option>
+              <option v-for="empresa in listaEmpresas" :key="empresa.id_empresa" :value="empresa.id_empresa">
+                {{ empresa.nombre }}
+              </option>
             </select>
           </div>
           
@@ -110,48 +111,129 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 
-// 1. Control del Modal
 const mostrarModal = ref(false)
+const editandoId = ref(null)
 
 const abrirModal = () => {
+  editandoId.value = null
+  formulario.titulo = ''
+  formulario.id_empresa = ''
+  formulario.ubicacion = ''
+  formulario.descripcion = ''
+  mostrarModal.value = true
+}
+
+const abrirEditar = (vacante) => {
+  editandoId.value = vacante.id_vacante
+  formulario.titulo = vacante.titulo
+  formulario.id_empresa = vacante.id_empresa || ''
+  formulario.ubicacion = vacante.ubicacion || ''
+  formulario.descripcion = vacante.descripcion || ''
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
-  // Limpiamos los campos
+  editandoId.value = null
   formulario.titulo = ''
-  formulario.empresa = ''
+  formulario.id_empresa = ''
   formulario.ubicacion = ''
   formulario.descripcion = ''
 }
 
-// 2. Datos del formulario
 const formulario = reactive({
   titulo: '',
-  empresa: '',
+  id_empresa: '',
   ubicacion: '',
   descripcion: ''
 })
 
-// 3. Tabla simulada
-const listaVacantes = ref([
-  { id: 1, titulo: 'Desarrollador Frontend', empresa: 'Tech Corp', fecha: '2024-05-24' },
-  { id: 2, titulo: 'Administrador de Bases de Datos', empresa: 'Innovatech', fecha: '2024-05-25' }
-])
+const listaVacantes = ref([])
+const listaEmpresas = ref([])
 
-// 4. Funciones
-const guardarVacante = () => {
-  console.log('Guardando vacante:', formulario)
-  // Aquí irá la conexión a la base de datos
-  
-  cerrarModal()
+const cargarVacantes = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/vacantes')
+    if (response.ok) {
+      listaVacantes.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar vacantes:', err)
+  }
 }
 
-const cerrarSesion = () => {
-  console.log('Cerrando sesión...')
+const cargarEmpresas = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/empresas')
+    if (response.ok) {
+      listaEmpresas.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar empresas:', err)
+  }
+}
+
+onMounted(() => {
+  cargarVacantes()
+  cargarEmpresas()
+})
+
+const guardarVacante = async () => {
+  try {
+    const isEdit = editandoId.value !== null
+    const url = isEdit 
+      ? `http://localhost:3000/vacantes/${editandoId.value}`
+      : 'http://localhost:3000/vacantes'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        titulo: formulario.titulo,
+        id_empresa: formulario.id_empresa,
+        ubicacion: formulario.ubicacion,
+        descripcion: formulario.descripcion
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al guardar vacante')
+    }
+
+    alert(isEdit ? '¡Vacante actualizada con éxito!' : '¡Vacante creada con éxito!')
+    cerrarModal()
+    cargarVacantes()
+  } catch (err) {
+    alert('Error al guardar vacante: ' + err.message)
+  }
+}
+
+const eliminarVacante = async (id) => {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta vacante?')) return
+
+  try {
+    const response = await fetch(`http://localhost:3000/vacantes/${id}`, {
+      method: 'DELETE'
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar vacante')
+    }
+
+    alert('Vacante eliminada exitosamente')
+    cargarVacantes()
+  } catch (err) {
+    alert('Error al eliminar vacante: ' + err.message)
+  }
 }
 </script>
 
