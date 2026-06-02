@@ -39,7 +39,7 @@ export const postCrearCV = async (req, res, next) => {
             throw error;
         }
 
-        const nuevoCv = await cvService.createCv(id_usuario, datos_personales, experiencia_laboral, formacion_academica, habilidades, ubicacion, telefono);
+        const nuevoCv = await cvServices.createCv(id_usuario, datos_personales, experiencia_laboral, formacion_academica, habilidades, ubicacion, telefono);
         res.status(201).json(nuevoCv);
     } catch (err) {
         next(err);
@@ -49,7 +49,7 @@ export const postCrearCV = async (req, res, next) => {
 export const putActualizarCV = async (req, res, next) => {
     try {
         const { id_cv } = req.params;
-        const result = await cvService.updateCv(id_cv, req.body);
+        const result = await cvServices.updateCv(id_cv, req.body);
         
         if (!result) {
             const error = new Error('CV no encontrado');
@@ -65,7 +65,7 @@ export const putActualizarCV = async (req, res, next) => {
 export const deleteEliminarCV = async (req, res, next) => {
     try {
         const { id_cv } = req.params;
-        const result = await cvService.deleteCv(id_cv);
+        const result = await cvServices.deleteCv(id_cv);
         
         if (!result) {
             const error = new Error('CV no encontrado');

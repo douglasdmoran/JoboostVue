@@ -26,7 +26,11 @@ export const getUsuarioPorCorreo = async (req, res, next) => {
 
 export const postCrearUsuario = async (req, res, next) => {
     try {
-        const { nombre, email, contrasenia, rol } = req.body;
+        let { nombre, email, contrasenia, rol } = req.body;
+        if (rol) {
+            rol = rol.toLowerCase();
+            if (rol === 'admin') rol = 'gestor';
+        }
         const user = await userService.createUser(nombre, email, contrasenia, rol);
         res.status(201).json({
             message: "¡Usuario registrado con éxito!",
@@ -59,7 +63,11 @@ export const postLoginUsuario = async (req, res, next) => {
 export const putActualizarUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { nombre, email, contrasenia, rol } = req.body;
+        let { nombre, email, contrasenia, rol } = req.body;
+        if (rol) {
+            rol = rol.toLowerCase();
+            if (rol === 'admin') rol = 'gestor';
+        }
         const updatedUser = await userService.updateUser(id, nombre, email, contrasenia, rol);
         if (!updatedUser) {
             const error = new Error('No se pudo actualizar, usuario no encontrado');

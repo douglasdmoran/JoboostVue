@@ -66,9 +66,19 @@ const iniciarSesion = async () => {
 
     // Guardamos la información del usuario en localStorage
     localStorage.setItem('usuario', JSON.stringify(data.usuario))
+    localStorage.setItem('currentUser', JSON.stringify(data.usuario))
     
-    // Redirigir a panel de administración
-    router.push('/admin')
+    // Redirigir según el rol del usuario
+    const rol = (data.usuario.rol || '').toLowerCase()
+    const userEmail = (data.usuario.correo || data.usuario.email || '').toLowerCase()
+    
+    if (rol === 'admin' || userEmail === 'gestor@jobboost.com') {
+      router.push('/admin')
+    } else if (rol === 'empresa' || userEmail.endsWith('@empresas.com')) {
+      router.push('/empresa')
+    } else {
+      router.push('/inicio')
+    }
   } catch (err) {
     alert('Error al iniciar sesión: ' + err.message)
   }

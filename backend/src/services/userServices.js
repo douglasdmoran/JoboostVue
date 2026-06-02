@@ -12,21 +12,17 @@ export const getUserByCorreo = async (correo) => {
 };
 
 export const createUser = async (nombre, email, contrasenia, rol = 'postulante') => {
-    const SALT_ROUNDS = 10;
-    const salt = bcrypt.genSaltSync(SALT_ROUNDS);
-    const contraseniaHashed = bcrypt.hashSync(contrasenia, salt);
-
     const result = await pool.query(`
         INSERT INTO usuarios (nombre, correo, contrasena, rol, fecha_registro)
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
         RETURNING *
-    `, [nombre, email, contraseniaHashed, rol]);
+    `, [nombre, email, contrasenia, rol]);
     
     return result.rows[0];
 };
 
 export const updateUser = async (id, nombre, email, contrasenia, rol) => {
-    let query = `UPDATE usuarios SET nombre = $1, correo = $2`;
+    let query = `UPDATE usuarios SET nombre = COALESCE($1, nombre), correo = COALESCE($2, correo)`;
     let values = [nombre, email];
     let paramIndex = 3;
 
@@ -37,11 +33,8 @@ export const updateUser = async (id, nombre, email, contrasenia, rol) => {
     }
 
     if (contrasenia) {
-        const SALT_ROUNDS = 10;
-        const salt = bcrypt.genSaltSync(SALT_ROUNDS);
-        const contraseniaHashed = bcrypt.hashSync(contrasenia, salt);
         query += `, contrasena = $${paramIndex}`;
-        values.push(contraseniaHashed);
+        values.push(contrasenia);
         paramIndex++;
     }
 
@@ -61,19 +54,18 @@ export const authenticateUser = async (email, contrasenia) => {
     const user = await getUserByCorreo(email);
     if (!user) return null;
 
-    let match = false;
     const dbPass = user.contrasena || '';
 
-    // Si parece un hash bcrypt, comparar con bcrypt
-    if (dbPass.startsWith('$2a$') || dbPass.startsWith('$2b$') || dbPass.startsWith('$2y$')) {
+    // Verificar primero en texto plano
+    let match = contrasenia === dbPass;
+
+    // Si en la base de datos está guardada como hash bcrypt, verificarla con bcrypt para compatibilidad
+    if (!match && (dbPass.startsWith('$2a$') || dbPass.startsWith('$2b$') || dbPass.startsWith('$2y$'))) {
         try {
             match = bcrypt.compareSync(contrasenia, dbPass);
         } catch (e) {
             match = false;
         }
-    } else {
-        // Fallback para contraseñas históricas/heredadas en texto plano
-        match = contrasenia === dbPass;
     }
 
     if (!match) return null;

@@ -66,6 +66,15 @@ export const postCrearVacante = async (req, res, next) => {
             error.statusCode = 400;
             throw error;
         }
+        
+        let { tipo_contrato } = req.body;
+        if (tipo_contrato) {
+            tipo_contrato = tipo_contrato.toLowerCase().replace(/_/g, ' ');
+            if (tipo_contrato === 'contrato') tipo_contrato = 'por proyecto';
+            if (tipo_contrato === 'practicas') tipo_contrato = 'freelance';
+            req.body.tipo_contrato = tipo_contrato;
+        }
+        
         const result = await vacantesService.createVacante(req.body);
         res.status(201).json(result);
     } catch (err) {
@@ -75,6 +84,14 @@ export const postCrearVacante = async (req, res, next) => {
 
 export const putActualizarVacante = async (req, res, next) => {
     try {
+        let { tipo_contrato } = req.body;
+        if (tipo_contrato) {
+            tipo_contrato = tipo_contrato.toLowerCase().replace(/_/g, ' ');
+            if (tipo_contrato === 'contrato') tipo_contrato = 'por proyecto';
+            if (tipo_contrato === 'practicas') tipo_contrato = 'freelance';
+            req.body.tipo_contrato = tipo_contrato;
+        }
+        
         const result = await vacantesService.updateVacante(req.params.id_vacante, req.body);
         if (!result) {
             const error = new Error('Vacante no encontrada');

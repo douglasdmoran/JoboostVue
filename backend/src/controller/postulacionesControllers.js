@@ -31,6 +31,15 @@ export const postCrearPostulacion = async (req, res, next) => {
             error.statusCode = 400;
             throw error;
         }
+        
+        let { estado } = req.body;
+        if (estado) {
+            estado = estado.toLowerCase().replace(/_/g, ' ');
+            if (estado === 'aceptado') estado = 'contratado';
+            if (estado === 'denegado') estado = 'rechazado';
+            req.body.estado = estado;
+        }
+        
         const result = await postulacionesService.createPostulacion(req.body);
         res.status(201).json(result);
     } catch (err) {
@@ -40,6 +49,14 @@ export const postCrearPostulacion = async (req, res, next) => {
 
 export const putActualizarPostulacion = async (req, res, next) => {
     try {
+        let { estado } = req.body;
+        if (estado) {
+            estado = estado.toLowerCase().replace(/_/g, ' ');
+            if (estado === 'aceptado') estado = 'contratado';
+            if (estado === 'denegado') estado = 'rechazado';
+            req.body.estado = estado;
+        }
+        
         const result = await postulacionesService.updatePostulacion(req.params.id_postulacion, req.body);
         if (!result) {
             const error = new Error('Postulación no encontrada');
