@@ -17,7 +17,15 @@
       <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
         {{ descripcionTruncada }}
       </p>
-      <span class="btn-primary" style="padding: 6px 15px; font-size: 0.85rem; border-radius: 4px; pointer-events: none;">Ver Detalle</span>
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+        <span class="btn-primary" style="padding: 6px 15px; font-size: 0.85rem; border-radius: 4px; pointer-events: none; display: inline-block;">Ver Detalle</span>
+        <span 
+          v-if="yaAplicado" 
+          style="color: #27ae60; font-weight: bold; font-size: 0.85rem; background-color: #e8f8f0; padding: 4px 10px; border-radius: 4px; border: 1px solid #27ae60; display: inline-block;"
+        >
+          <i class="fa-solid fa-circle-check"></i> Ya has aplicado a este empleo
+        </span>
+      </div>
     </div>
   </router-link>
 </template>
@@ -29,6 +37,27 @@ const props = defineProps({
   vacante: {
     type: Object,
     required: true
+  }
+})
+
+const yaAplicado = computed(() => {
+  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
+  if (!userJson) return false
+  let user
+  try {
+    user = JSON.parse(userJson)
+  } catch (e) {
+    return false
+  }
+  if (!user || !user.id_usuario) return false
+  
+  const aplicadasJson = localStorage.getItem(`aplicaciones_${user.id_usuario}`)
+  if (!aplicadasJson) return false
+  try {
+    const aplicadasIds = JSON.parse(aplicadasJson)
+    return Array.isArray(aplicadasIds) && aplicadasIds.includes(props.vacante.id_vacante)
+  } catch (e) {
+    return false
   }
 })
 

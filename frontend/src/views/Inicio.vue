@@ -4,8 +4,8 @@
     
     <main>
       <section class="search-section">
-        <div class="search-container">
-          <div style="position: relative; flex: 2; display: flex; align-items: center;">
+        <div class="search-container" style="max-width: 800px; margin: 0 auto;">
+          <div style="position: relative; flex: 1.5; display: flex; align-items: center;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; color: #888;"></i>
             <input 
               type="text" 
@@ -18,14 +18,13 @@
             <i class="fa-solid fa-location-dot" style="position: absolute; left: 15px; color: #888; z-index: 10;"></i>
             <select 
               v-model="selectedLocation" 
-              style="padding-left: 45px; width: 100%; border: none; outline: none; font-size: 1rem; color: #333; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none;"
+              style="padding: 15px 40px 15px 45px; width: 100%; border: 1px solid var(--gris-borde); border-radius: 8px; outline: none; font-size: 1rem; color: #333; background: white; cursor: pointer; appearance: none; -webkit-appearance: none;"
             >
               <option value="">Todas las ubicaciones</option>
               <option v-for="dept in departamentos" :key="dept" :value="dept">{{ dept }}</option>
             </select>
-            <i class="fa-solid fa-chevron-down" style="position: absolute; right: 15px; color: #888; pointer-events: none;"></i>
+            <i class="fa-solid fa-chevron-down" style="position: absolute; right: 15px; color: #888; pointer-events: none; z-index: 10;"></i>
           </div>
-          <button class="btn-primary" @click="filtrar">Buscar</button>
         </div>
       </section>
 
@@ -35,29 +34,29 @@
           <i class="fa-solid fa-users" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small style="color: #777;">Activos</small><br>
-            <strong>50,000,080</strong>
+            <strong>{{ estadisticas.activos.toLocaleString() }}</strong>
           </div>
         </div>
         <div class="stat-item" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 15px; min-width: 200px;">
           <i class="fa-solid fa-briefcase" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small style="color: #777;">Empleos</small><br>
-            <strong>8,000</strong>
+            <strong>{{ estadisticas.empleos.toLocaleString() }}</strong>
           </div>
         </div>
         <div class="stat-item" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 15px; min-width: 200px;">
           <i class="fa-solid fa-building" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small style="color: #777;">Empresas</small><br>
-            <strong>44,000</strong>
+            <strong>{{ estadisticas.empresas.toLocaleString() }}</strong>
           </div>
         </div>
       </section>
 
       <!-- Search Results -->
       <section v-else class="container" style="padding-top: 20px;">
-        <h2 style="margin-bottom: 20px;">Resultados de Búsqueda</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        <h2 style="margin-bottom: 20px; text-align: center;">Resultados de Búsqueda</h2>
+        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 900px; margin: 0 auto;">
           <JobCard 
             v-for="vacante in vacantesFiltradas" 
             :key="vacante.id_vacante" 
@@ -116,6 +115,7 @@ import JobCard from '../components/JobCard.vue'
 const searchQuery = ref('')
 const selectedLocation = ref('')
 const todasLasVacantes = ref([])
+const estadisticas = ref({ activos: 0, empleos: 0, empresas: 0 })
 
 const departamentos = [
   'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
@@ -154,12 +154,50 @@ const cargarVacantes = async () => {
   }
 }
 
+const cargarEstadisticas = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/estadisticas')
+    if (response.ok) {
+      estadisticas.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar estadísticas:', err)
+  }
+}
+
+const cargarMisPostulaciones = async () => {
+  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
+  if (!userJson) return
+  let user
+  try {
+    user = JSON.parse(userJson)
+  } catch (e) {
+    return
+  }
+  if (!user || !user.id_usuario) return
+  
+  try {
+    const response = await fetch('http://localhost:3000/postulaciones')
+    if (response.ok) {
+      const postulaciones = await response.json()
+      const misPostulacionesIds = postulaciones
+        .filter(p => p.id_usuario === user.id_usuario)
+        .map(p => p.id_vacante)
+      localStorage.setItem(`aplicaciones_${user.id_usuario}`, JSON.stringify(misPostulacionesIds))
+    }
+  } catch (err) {
+    console.error('Error al cargar postulaciones del usuario:', err)
+  }
+}
+
 const filtrar = () => {
   // En Vue, la reactividad filtra automáticamente mediante vacantesFiltradas.
 }
 
 onMounted(() => {
   cargarVacantes()
+  cargarEstadisticas()
+  cargarMisPostulaciones()
 })
 </script>
 

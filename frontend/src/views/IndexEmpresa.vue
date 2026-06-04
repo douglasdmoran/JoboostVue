@@ -95,7 +95,7 @@ const cargarEstadisticas = async () => {
   } else if (email.includes('selectos') || name.includes('selectos')) {
     idEmpresa = 6
   }
-
+ 
   try {
     // 1. Cargar vacantes de la empresa
     const resVac = await fetch('http://localhost:3000/vacantes')

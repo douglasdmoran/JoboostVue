@@ -29,6 +29,7 @@ import PerfilEmpresa from './views/PerfilEmpresa.vue'
 import GestionEmpresa from './views/GestionEmpresa.vue'
 import Publicar from './views/Publicar.vue'
 import Solicitudes from './views/Solicitudes.vue'
+import EstadoVacantes from './views/EstadoVacantes.vue'
 
 // 2. Definimos las rutas
 const routes = [
@@ -61,7 +62,8 @@ const routes = [
   { path: '/empresa/perfil', component: PerfilEmpresa },
   { path: '/empresa/gestion', component: GestionEmpresa },
   { path: '/empresa/publicar', component: Publicar },
-  { path: '/empresa/solicitudes', component: Solicitudes }
+  { path: '/empresa/solicitudes', component: Solicitudes },
+  { path: '/empresa/estado-vacantes', component: EstadoVacantes }
 ]
 
 // 3. Creamos el router

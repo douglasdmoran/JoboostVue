@@ -17,13 +17,16 @@
                 </div>
 
                 <div class="input-group" style="margin-bottom: 25px;">
-                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">ID Empresa</label>
-                    <input type="number" v-model="idEmpresaInput" id="pub-id-empresa" placeholder="ID numérico de la empresa" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1.1rem;" required>
+                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Departamento</label>
+                    <select v-model="departamentoSeleccionado" id="pub-departamento" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1.1rem;" required>
+                        <option value="" disabled>Seleccione un departamento</option>
+                        <option v-for="dept in departamentos" :key="dept" :value="dept">{{ dept }}</option>
+                    </select>
                 </div>
 
                 <div class="input-group" style="margin-bottom: 25px;">
-                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Ubicación</label>
-                    <input type="text" v-model="ubicacion" id="pub-ubicacion" placeholder="Santa Ana, Bypass" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1.1rem;" required>
+                    <label style="font-weight: 500; margin-bottom: 8px; display: block;">Dirección de la tienda</label>
+                    <input type="text" v-model="direccionDetalle" id="pub-direccion-detalle" placeholder="Ej: Bypass, frente a gasolinera" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1.1rem;" required>
                 </div>
 
                 <div class="input-group" style="margin-bottom: 25px;">
@@ -81,11 +84,18 @@ const router = useRouter()
 
 const titulo = ref('')
 const idEmpresaInput = ref(2)
-const ubicacion = ref('')
+const departamentoSeleccionado = ref('')
+const direccionDetalle = ref('')
 const descripcion = ref('')
 const requisitos = ref('')
 const tipoContrato = ref('tiempo_completo')
 const modalidad = ref('presencial')
+
+const departamentos = [
+  'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
+  'La Paz', 'La Unión', 'Morazán', 'San Miguel', 'San Salvador',
+  'San Vicente', 'Santa Ana', 'Sonsonate', 'Usulután'
+]
 
 const mensajeEstado = ref('')
 const esError = ref(false)
@@ -132,7 +142,27 @@ const cargarDatos = async () => {
         if (v) {
           titulo.value = v.titulo || ''
           idEmpresaInput.value = v.id_empresa || mappedId
-          ubicacion.value = v.ubicacion || ''
+          const rawUbicacion = v.ubicacion || ''
+          const parts = rawUbicacion.split(',')
+          if (parts.length > 1) {
+            const dep = parts[0].trim()
+            if (departamentos.includes(dep)) {
+              departamentoSeleccionado.value = dep
+              direccionDetalle.value = parts.slice(1).join(',').trim()
+            } else {
+              departamentoSeleccionado.value = ''
+              direccionDetalle.value = rawUbicacion
+            }
+          } else {
+            const cleanLoc = rawUbicacion.trim()
+            if (departamentos.includes(cleanLoc)) {
+              departamentoSeleccionado.value = cleanLoc
+              direccionDetalle.value = ''
+            } else {
+              departamentoSeleccionado.value = ''
+              direccionDetalle.value = rawUbicacion
+            }
+          }
           descripcion.value = v.descripcion || ''
           requisitos.value = v.requisitos || ''
           tipoContrato.value = v.tipo_contrato || 'tiempo_completo'
@@ -156,15 +186,17 @@ const guardarVacante = async () => {
     
   const method = editMode.value ? 'PUT' : 'POST'
 
+  const combinedUbicacion = `${departamentoSeleccionado.value.trim()}, ${direccionDetalle.value.trim()}`
+
   const bodyData = {
     id_empresa: parseInt(idEmpresaInput.value),
     titulo: titulo.value.trim(),
     descripcion: descripcion.value.trim(),
     requisitos: requisitos.value.trim(),
-    ubicacion: ubicacion.value.trim(),
+    ubicacion: combinedUbicacion,
     tipo_contrato: tipoContrato.value,
     modalidad: modalidad.value,
-    salario_oferta: 'A convenir',
+    salario_oferta: null,
     fecha_limite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     activa: true
   }

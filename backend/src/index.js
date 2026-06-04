@@ -22,6 +22,7 @@ import valoracionesRouter from './routes/valoraciones.js';
 import vacantesRouter from './routes/vacantes.js';
 
 import { errorHandler } from './middlewares/errorHandler.js';
+import { pool } from './db.js';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -37,8 +38,24 @@ app.use(cors({
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('Servidor en linea y al 100 %     https://d1ih8jugeo2m5m.cloudfront.net/2023/01/como-funciona-un-servidor-web-ingeniero.jpg  ');
+  res.send('Servidor en linea y al 100 %     https://d1ih8jugeo2m5m.cloudfront.log  ');
 }); 
+
+app.get('/estadisticas', async (req, res, next) => {
+  try {
+    const usuariosCount = await pool.query("SELECT COUNT(*) FROM usuarios WHERE rol = 'postulante'");
+    const empleosCount = await pool.query("SELECT COUNT(*) FROM vacantes WHERE activa = true");
+    const empresasCount = await pool.query("SELECT COUNT(*) FROM empresas");
+    
+    res.status(200).json({
+      activos: parseInt(usuariosCount.rows[0].count, 10),
+      empleos: parseInt(empleosCount.rows[0].count, 10),
+      empresas: parseInt(empresasCount.rows[0].count, 10)
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 app.use('/users', usersRouter);
 

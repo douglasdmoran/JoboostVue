@@ -10,6 +10,7 @@
           <li><router-link to="/empresa" exact-active-class="active">Inicio</router-link></li>
           <li><router-link to="/empresa/publicar" active-class="active">Publicar Empleo</router-link></li>
           <li><router-link to="/empresa/solicitudes" active-class="active">Solicitudes</router-link></li>
+          <li><router-link to="/empresa/estado-vacantes" active-class="active">Estado Vacantes</router-link></li>
           <li><router-link to="/empresa/gestion" active-class="active">Valorar Empresa</router-link></li>
           <li><router-link to="/empresa/perfil" active-class="active">Mi Perfil</router-link></li>
         </ul>

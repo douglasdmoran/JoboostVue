@@ -85,8 +85,34 @@ const buscarVacantes = async () => {
   }
 }
 
+const cargarMisPostulaciones = async () => {
+  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
+  if (!userJson) return
+  let user
+  try {
+    user = JSON.parse(userJson)
+  } catch (e) {
+    return
+  }
+  if (!user || !user.id_usuario) return
+  
+  try {
+    const response = await fetch('http://localhost:3000/postulaciones')
+    if (response.ok) {
+      const postulaciones = await response.json()
+      const misPostulacionesIds = postulaciones
+        .filter(p => p.id_usuario === user.id_usuario)
+        .map(p => p.id_vacante)
+      localStorage.setItem(`aplicaciones_${user.id_usuario}`, JSON.stringify(misPostulacionesIds))
+    }
+  } catch (err) {
+    console.error('Error al cargar postulaciones del usuario:', err)
+  }
+}
+
 onMounted(() => {
   buscarVacantes()
+  cargarMisPostulaciones()
 })
 </script>
 

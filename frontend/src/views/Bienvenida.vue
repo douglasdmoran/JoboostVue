@@ -24,21 +24,21 @@
           <i class="fa-solid fa-users" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small>Activos</small><br>
-            <strong>50,000,080</strong>
+            <strong>{{ estadisticas.activos.toLocaleString() }}</strong>
           </div>
         </div>
         <div class="stat-item" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
           <i class="fa-solid fa-briefcase" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small>Empleos</small><br>
-            <strong>8,000</strong>
+            <strong>{{ estadisticas.empleos.toLocaleString() }}</strong>
           </div>
         </div>
         <div class="stat-item" style="background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
           <i class="fa-solid fa-building" style="font-size: 2rem; color: #333;"></i>
           <div style="text-align: left;">
             <small>Empresas</small><br>
-            <strong>44,000</strong>
+            <strong>{{ estadisticas.empresas.toLocaleString() }}</strong>
           </div>
         </div>
       </section>
@@ -82,11 +82,29 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import NavbarCandidate from '../components/NavbarCandidate.vue'
+
+const estadisticas = ref({ activos: 0, empleos: 0, empresas: 0 })
+
+const cargarEstadisticas = async () => {
+  try {
+    const response = await fetch('http://localhost:3000/estadisticas')
+    if (response.ok) {
+      estadisticas.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error al cargar estadísticas:', err)
+  }
+}
 
 const advertirLogin = () => {
   alert('Debes iniciar sesión para realizar búsquedas')
 }
+
+onMounted(() => {
+  cargarEstadisticas()
+})
 </script>
 
 <style scoped>
