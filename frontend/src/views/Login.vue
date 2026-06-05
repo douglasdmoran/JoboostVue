@@ -98,7 +98,7 @@ const iniciarSesion = async () => {
       ""
     ).toLowerCase();
 
-    if (rol === "admin" || userEmail === "gestor@jobboost.com") {
+    if (rol === "admin" || rol === "gestor" || userEmail === "gestor@jobboost.com") {
       router.push("/admin");
     } else if (rol === "empresa" || userEmail.endsWith("@empresas.com")) {
       // Pre-resolver id_empresa antes de redirigir
