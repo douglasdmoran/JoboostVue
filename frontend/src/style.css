@@ -214,8 +214,14 @@ body {
 
 .companies-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+    grid-template-columns: repeat(2, 1fr); 
     gap: 25px; 
+}
+
+@media (max-width: 768px) {
+    .companies-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .company-card { 
@@ -225,8 +231,9 @@ body {
     padding: 24px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.015);
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -240,17 +247,16 @@ body {
 }
 
 .company-logo-box { 
-    width: 60px; 
-    height: 60px; 
+    width: 70px; 
+    height: 70px; 
     border-radius: 12px; 
     color: var(--blanco); 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     font-weight: 700; 
-    font-size: 1.1rem; 
+    font-size: 1.2rem; 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
-    margin-bottom: 16px;
     flex-shrink: 0;
 }
 
@@ -258,26 +264,21 @@ body {
     width: 100%;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    justify-content: center;
 }
 
 .company-info h3 {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #1e293b;
-    margin: 0 0 8px 0;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 2.8em; /* Holds exactly two lines to keep grid items aligned */
+    margin: 0 0 6px 0;
+    line-height: 1.3;
 }
 
 .company-card p.no-ratings {
     color: #64748b;
     font-size: 0.85rem;
-    margin: 0 0 12px 0;
+    margin: 0 0 6px 0;
     font-weight: 500;
 }
 
@@ -287,7 +288,7 @@ body {
     display: flex; 
     align-items: center; 
     gap: 3px; 
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .stars-yellow strong {
@@ -298,7 +299,6 @@ body {
 }
 
 .company-card small {
-    margin-top: auto;
     color: #64748b;
     font-size: 0.85rem;
     display: flex;
