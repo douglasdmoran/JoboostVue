@@ -105,6 +105,36 @@
               class="form-input"
             >
           </div>
+
+          <div v-if="!editandoId" class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-id-card"></i>
+                NIT *
+              </label>
+              <input 
+                type="text" 
+                v-model="formulario.nit" 
+                required 
+                placeholder="0000-000000-000-0"
+                class="form-input"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-industry"></i>
+                Sector o Industria *
+              </label>
+              <input 
+                type="text" 
+                v-model="formulario.sector" 
+                required 
+                placeholder="Ej: Tecnología, Alimentos, Textil"
+                class="form-input"
+              >
+            </div>
+          </div>
           
           <div class="form-group">
             <label class="form-label">
@@ -129,8 +159,38 @@
               <option value="Usulután">Usulután</option>
             </select>
           </div>
+
+          <div v-if="!editandoId" class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-phone"></i>
+                Teléfono de Contacto *
+              </label>
+              <input 
+                type="tel" 
+                v-model="formulario.telefono" 
+                required 
+                placeholder="2200-0000"
+                class="form-input"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-clock"></i>
+                Horario Laboral *
+              </label>
+              <input 
+                type="text" 
+                v-model="formulario.horario" 
+                required 
+                placeholder="Ej: Lunes a Viernes 8:00 AM - 5:00 PM"
+                class="form-input"
+              >
+            </div>
+          </div>
           
-          <div class="form-group">
+          <div v-if="editandoId" class="form-group">
             <label class="form-label">
               <i class="fa-solid fa-globe"></i>
               Sitio Web
@@ -143,7 +203,7 @@
             >
           </div>
           
-          <div class="form-group">
+          <div v-if="editandoId" class="form-group">
             <label class="form-label">
               <i class="fa-solid fa-file-lines"></i>
               Descripción
@@ -154,6 +214,40 @@
               placeholder="Describe la empresa, su misión, visión, valores, etc."
               class="form-textarea"
             ></textarea>
+          </div>
+
+          <div v-if="!editandoId" class="form-divider">
+            <span>Credenciales de acceso</span>
+          </div>
+
+          <div v-if="!editandoId" class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-envelope"></i>
+                Correo Corporativo *
+              </label>
+              <input 
+                type="email" 
+                v-model="formulario.email" 
+                required 
+                placeholder="rrhh@empresa.com"
+                class="form-input"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-lock"></i>
+                Contraseña *
+              </label>
+              <input 
+                type="password" 
+                v-model="formulario.password" 
+                required 
+                placeholder="Mínimo 6 caracteres"
+                class="form-input"
+              >
+            </div>
           </div>
           
           <div class="modal-actions">
@@ -178,12 +272,22 @@ import { ref, reactive, onMounted } from 'vue'
 const mostrarModal = ref(false)
 const editandoId = ref(null)
 
-const abrirModal = () => {
-  editandoId.value = null
+const limpiarFormulario = () => {
   formulario.nombre = ''
   formulario.ubicacion = ''
   formulario.sitio_web = ''
   formulario.descripcion = ''
+  formulario.nit = ''
+  formulario.sector = ''
+  formulario.telefono = ''
+  formulario.horario = ''
+  formulario.email = ''
+  formulario.password = ''
+}
+
+const abrirModal = () => {
+  editandoId.value = null
+  limpiarFormulario()
   mostrarModal.value = true
 }
 
@@ -193,23 +297,33 @@ const abrirEditar = (empresa) => {
   formulario.ubicacion = empresa.ubicacion || ''
   formulario.sitio_web = empresa.sitio_web || ''
   formulario.descripcion = empresa.descripcion || ''
+  // Los campos de creación no aplican en edición
+  formulario.nit = ''
+  formulario.sector = ''
+  formulario.telefono = ''
+  formulario.horario = ''
+  formulario.email = ''
+  formulario.password = ''
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
   editandoId.value = null
-  formulario.nombre = ''
-  formulario.ubicacion = ''
-  formulario.sitio_web = ''
-  formulario.descripcion = ''
+  limpiarFormulario()
 }
 
 const formulario = reactive({
   nombre: '',
   ubicacion: '',
   sitio_web: '',
-  descripcion: ''
+  descripcion: '',
+  nit: '',
+  sector: '',
+  telefono: '',
+  horario: '',
+  email: '',
+  password: ''
 })
 
 const listaEmpresas = ref([])
@@ -237,6 +351,12 @@ const guardarEmpresa = async () => {
       : 'http://localhost:3000/empresas'
     const method = isEdit ? 'PUT' : 'POST'
 
+    // Si es creación, construir descripción con los campos extra (como RegistroEmpresa.vue)
+    let descripcionFinal = formulario.descripcion
+    if (!isEdit && formulario.sector) {
+      descripcionFinal = `Sector: ${formulario.sector}. NIT: ${formulario.nit}. Email: ${formulario.email}. Horario: ${formulario.horario}. Tel: ${formulario.telefono}`
+    }
+
     const response = await fetch(url, {
       method: method,
       headers: {
@@ -246,7 +366,7 @@ const guardarEmpresa = async () => {
         nombre: formulario.nombre,
         ubicacion: formulario.ubicacion,
         sitio_web: formulario.sitio_web,
-        descripcion: formulario.descripcion
+        descripcion: descripcionFinal
       })
     })
 
@@ -254,6 +374,26 @@ const guardarEmpresa = async () => {
 
     if (!response.ok) {
       throw new Error(data.message || 'Error al guardar empresa')
+    }
+
+    // Si es creación, también crear el usuario con rol "empresa" (como RegistroEmpresa.vue)
+    if (!isEdit && formulario.email && formulario.password) {
+      try {
+        await fetch('http://localhost:3000/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nombre: formulario.nombre.trim(),
+            email: formulario.email.trim(),
+            contrasenia: formulario.password,
+            rol: 'empresa'
+          })
+        })
+      } catch (userErr) {
+        console.error('Error al crear usuario de empresa:', userErr)
+      }
     }
 
     alert(isEdit ? '¡Empresa actualizada con éxito!' : '¡Empresa creada con éxito!')
@@ -594,8 +734,10 @@ const eliminarEmpresa = async (id) => {
 .modal-container {
   background: white;
   border-radius: 20px;
-  width: 550px;
+  width: 650px;
   max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.3s ease-out;
 }
@@ -655,6 +797,39 @@ const eliminarEmpresa = async (id) => {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-divider {
+  text-align: center;
+  margin: 10px 0 20px;
+  position: relative;
+}
+
+.form-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e1e5e9;
+}
+
+.form-divider span {
+  background: white;
+  padding: 0 15px;
+  position: relative;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-label {

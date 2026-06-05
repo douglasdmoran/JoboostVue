@@ -136,8 +136,7 @@
             <select v-model="formulario.rol" required class="form-select">
               <option value="postulante">Postulante</option>
               <option value="gestor">Gestor</option>
-              <option value="empresa">Empresa</option>
-              <option value="admin">Administrador</option>
+              <option v-if="editandoId || formulario.rol === 'empresa'" value="empresa">Empresa</option>
             </select>
           </div>
           

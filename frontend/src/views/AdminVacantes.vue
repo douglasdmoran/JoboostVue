@@ -132,28 +132,31 @@
             </select>
           </div>
           
-          <div class="form-group">
-            <label class="form-label">
-              <i class="fa-solid fa-location-dot"></i>
-              Ubicación (Departamento) *
-            </label>
-            <select v-model="formulario.ubicacion" required class="form-select">
-              <option value="">Seleccione un departamento</option>
-              <option value="Ahuachapán">Ahuachapán</option>
-              <option value="Cabañas">Cabañas</option>
-              <option value="Chalatenango">Chalatenango</option>
-              <option value="Cuscatlán">Cuscatlán</option>
-              <option value="La Libertad">La Libertad</option>
-              <option value="La Paz">La Paz</option>
-              <option value="La Unión">La Unión</option>
-              <option value="Morazán">Morazán</option>
-              <option value="San Miguel">San Miguel</option>
-              <option value="San Salvador">San Salvador</option>
-              <option value="San Vicente">San Vicente</option>
-              <option value="Santa Ana">Santa Ana</option>
-              <option value="Sonsonate">Sonsonate</option>
-              <option value="Usulután">Usulután</option>
-            </select>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-location-dot"></i>
+                Departamento *
+              </label>
+              <select v-model="formulario.departamento" required class="form-select">
+                <option value="">Seleccione un departamento</option>
+                <option v-for="dept in departamentos" :key="dept" :value="dept">{{ dept }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-map-pin"></i>
+                Dirección detallada *
+              </label>
+              <input 
+                type="text" 
+                v-model="formulario.direccionDetalle" 
+                required 
+                placeholder="Ej: Bypass, frente a gasolinera"
+                class="form-input"
+              >
+            </div>
           </div>
           
           <div class="form-group">
@@ -163,11 +166,52 @@
             </label>
             <textarea 
               v-model="formulario.descripcion" 
-              rows="5" 
+              rows="4" 
               required
-              placeholder="Describe las responsabilidades, requisitos, beneficios del puesto..."
+              placeholder="Describe las responsabilidades principales del puesto, el ambiente laboral, beneficios, etc."
               class="form-textarea"
             ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-list-check"></i>
+              Requisitos del Puesto *
+            </label>
+            <textarea 
+              v-model="formulario.requisitos" 
+              rows="4" 
+              required
+              placeholder="Lista los requisitos: formación académica, experiencia, habilidades técnicas y blandas..."
+              class="form-textarea"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-briefcase"></i>
+                Tipo de Contrato *
+              </label>
+              <select v-model="formulario.tipoContrato" class="form-select">
+                <option value="tiempo_completo">📋 Tiempo Completo</option>
+                <option value="medio_tiempo">🕐 Medio Tiempo</option>
+                <option value="contrato">📄 Contrato</option>
+                <option value="practicas">🎓 Prácticas</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fa-solid fa-building"></i>
+                Modalidad de Trabajo *
+              </label>
+              <select v-model="formulario.modalidad" class="form-select">
+                <option value="presencial">🏢 Presencial</option>
+                <option value="remoto">🏠 Remoto</option>
+                <option value="hibrido">🔄 Híbrido</option>
+              </select>
+            </div>
           </div>
           
           <div class="modal-actions">
@@ -192,12 +236,26 @@ import { ref, reactive, onMounted } from 'vue'
 const mostrarModal = ref(false)
 const editandoId = ref(null)
 
-const abrirModal = () => {
-  editandoId.value = null
+const departamentos = [
+  'Ahuachapán', 'Cabañas', 'Chalatenango', 'Cuscatlán', 'La Libertad',
+  'La Paz', 'La Unión', 'Morazán', 'San Miguel', 'San Salvador',
+  'San Vicente', 'Santa Ana', 'Sonsonate', 'Usulután'
+]
+
+const limpiarFormulario = () => {
   formulario.titulo = ''
   formulario.id_empresa = ''
-  formulario.ubicacion = ''
+  formulario.departamento = ''
+  formulario.direccionDetalle = ''
   formulario.descripcion = ''
+  formulario.requisitos = ''
+  formulario.tipoContrato = 'tiempo_completo'
+  formulario.modalidad = 'presencial'
+}
+
+const abrirModal = () => {
+  editandoId.value = null
+  limpiarFormulario()
   mostrarModal.value = true
 }
 
@@ -205,25 +263,50 @@ const abrirEditar = (vacante) => {
   editandoId.value = vacante.id_vacante
   formulario.titulo = vacante.titulo
   formulario.id_empresa = vacante.id_empresa || ''
-  formulario.ubicacion = vacante.ubicacion || ''
+  // Parsear ubicación combinada "Departamento, Dirección"
+  const rawUbicacion = vacante.ubicacion || ''
+  const parts = rawUbicacion.split(',')
+  if (parts.length > 1) {
+    const dep = parts[0].trim()
+    if (departamentos.includes(dep)) {
+      formulario.departamento = dep
+      formulario.direccionDetalle = parts.slice(1).join(',').trim()
+    } else {
+      formulario.departamento = ''
+      formulario.direccionDetalle = rawUbicacion
+    }
+  } else {
+    const cleanLoc = rawUbicacion.trim()
+    if (departamentos.includes(cleanLoc)) {
+      formulario.departamento = cleanLoc
+      formulario.direccionDetalle = ''
+    } else {
+      formulario.departamento = ''
+      formulario.direccionDetalle = rawUbicacion
+    }
+  }
   formulario.descripcion = vacante.descripcion || ''
+  formulario.requisitos = vacante.requisitos || ''
+  formulario.tipoContrato = vacante.tipo_contrato || 'tiempo_completo'
+  formulario.modalidad = vacante.modalidad || 'presencial'
   mostrarModal.value = true
 }
 
 const cerrarModal = () => {
   mostrarModal.value = false
   editandoId.value = null
-  formulario.titulo = ''
-  formulario.id_empresa = ''
-  formulario.ubicacion = ''
-  formulario.descripcion = ''
+  limpiarFormulario()
 }
 
 const formulario = reactive({
   titulo: '',
   id_empresa: '',
-  ubicacion: '',
-  descripcion: ''
+  departamento: '',
+  direccionDetalle: '',
+  descripcion: '',
+  requisitos: '',
+  tipoContrato: 'tiempo_completo',
+  modalidad: 'presencial'
 })
 
 const listaVacantes = ref([])
@@ -273,6 +356,8 @@ const guardarVacante = async () => {
       : 'http://localhost:3000/vacantes'
     const method = isEdit ? 'PUT' : 'POST'
 
+    const combinedUbicacion = `${formulario.departamento.trim()}, ${formulario.direccionDetalle.trim()}`
+
     const response = await fetch(url, {
       method: method,
       headers: {
@@ -280,9 +365,15 @@ const guardarVacante = async () => {
       },
       body: JSON.stringify({
         titulo: formulario.titulo,
-        id_empresa: formulario.id_empresa,
-        ubicacion: formulario.ubicacion,
-        descripcion: formulario.descripcion
+        id_empresa: parseInt(formulario.id_empresa),
+        ubicacion: combinedUbicacion,
+        descripcion: formulario.descripcion,
+        requisitos: formulario.requisitos,
+        tipo_contrato: formulario.tipoContrato,
+        modalidad: formulario.modalidad,
+        salario_oferta: null,
+        fecha_limite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        activa: true
       })
     })
 
@@ -708,6 +799,12 @@ const eliminarVacante = async (id) => {
 
 .form-group {
   margin-bottom: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
 }
 
 .form-label {
