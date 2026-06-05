@@ -8,5 +8,6 @@ import SidebarAdmin from './components/SidebarAdmin.vue'
 
 const app = createApp(App)
 app.component('SidebarAdmin', SidebarAdmin)
+// Configura el router para que este disponible en toda la aplicacióo
 app.use(router) 
 app.mount('#app')
