@@ -27,18 +27,18 @@
           @click="irADetalle(company.id_empresa)" 
           class="company-card"
         >
-          <div class="company-logo-box" :style="{ backgroundColor: company.logo_url ? 'transparent' : generarColor(company.nombre), overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }">
+          <div class="company-logo-box" :style="{ backgroundColor: company.logo_url ? 'transparent' : generarColor(company.nombre) }">
             <img v-if="company.logo_url" :src="company.logo_url" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
             <span v-else>{{ generarLogo(company.nombre) }}</span>
           </div>
           <div class="company-info">
-            <h3 style="font-weight: bold; color: #333;">{{ company.nombre }}</h3>
+            <h3>{{ company.nombre }}</h3>
             <div class="stars-yellow" v-if="parseFloat(company.calificacion_promedio || 0) > 0">
               <i v-for="n in 5" :key="n" :class="getStarClass(n, parseFloat(company.calificacion_promedio || 0))" style="color: #ffcc00; margin-right: 2px;"></i>
-              <strong style="color: #333; margin-left: 5px; font-size: 0.9rem;">{{ parseFloat(company.calificacion_promedio).toFixed(1) }}</strong>
+              <strong>{{ parseFloat(company.calificacion_promedio).toFixed(1) }}</strong>
             </div>
-            <p v-else style="color: #888; font-size: 0.85rem; margin: 5px 0 8px 0;">Sin valoraciones aún</p>
-            <small style="color: #666; font-size: 0.85rem;"><i class="fa-solid fa-location-dot" style="margin-right: 4px;"></i>{{ company.ubicacion || 'Sin ubicación' }}</small>
+            <p v-else class="no-ratings">Sin valoraciones aún</p>
+            <small><i class="fa-solid fa-location-dot" style="margin-right: 4px;"></i>{{ company.ubicacion || 'Sin ubicación' }}</small>
           </div>
         </article>
 
@@ -54,6 +54,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCandidate from '../components/NavbarCandidate.vue'
+import { generarLogo, generarColor } from '../utils/empresaUtils'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -89,24 +90,7 @@ const getStarClass = (n, stars) => {
   }
 }
 
-// Genera un color determinístico basado en el nombre de la empresa
-const generarColor = (nombre) => {
-  const colores = ['#1e3a8a', '#c8102e', '#005a32', '#004a99', '#f39c12', '#6b21a8', '#0d6efd', '#dc3545', '#198754', '#e85d04']
-  let hash = 0
-  for (let i = 0; i < nombre.length; i++) {
-    hash = nombre.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return colores[Math.abs(hash) % colores.length]
-}
 
-// Genera un logo (iniciales o abreviatura) basado en el nombre
-const generarLogo = (nombre) => {
-  const words = nombre.trim().split(/\s+/)
-  if (words.length === 1) {
-    return nombre.substring(0, 3).toUpperCase()
-  }
-  return words.map(w => w[0]).join('').toUpperCase().substring(0, 4)
-}
 
 const irADetalle = (id) => {
   router.push(`/empresas/detalle/${id}`)

@@ -83,9 +83,15 @@ export function generarColor(nombre) {
  * Genera un logo (iniciales) basado en el nombre
  */
 export function generarLogo(nombre) {
-  const words = nombre.trim().split(/\s+/)
+  const limpio = nombre.replace(/[.,()]/g, '').trim()
+  const words = limpio.split(/\s+/).filter(w => {
+    const lower = w.toLowerCase()
+    return lower !== 'de' && lower !== 'la' && lower !== 'el' && lower !== 'y' && lower !== 'sa' && lower !== 'cv'
+  })
+  
+  if (words.length === 0) return 'EMP'
   if (words.length === 1) {
-    return nombre.substring(0, 3).toUpperCase()
+    return words[0].substring(0, 3).toUpperCase()
   }
-  return words.map(w => w[0]).join('').toUpperCase().substring(0, 4)
+  return words.map(w => w[0]).join('').toUpperCase().substring(0, 3)
 }
