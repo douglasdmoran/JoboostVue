@@ -81,6 +81,8 @@ const iniciarSesion = async () => {
     // Guardamos la información del usuario en localStorage
     localStorage.setItem("usuario", JSON.stringify(data.usuario));
     localStorage.setItem("currentUser", JSON.stringify(data.usuario));
+    // Limpiar cache de id_empresa anterior para que se resuelva dinámicamente
+    localStorage.removeItem("id_empresa");
 
     // Redirigir según el rol del usuario
     const rol = (data.usuario.rol || "").toLowerCase();
@@ -93,6 +95,29 @@ const iniciarSesion = async () => {
     if (rol === "admin" || userEmail === "gestor@jobboost.com") {
       router.push("/admin");
     } else if (rol === "empresa" || userEmail.endsWith("@empresas.com")) {
+      // Pre-resolver id_empresa antes de redirigir
+      try {
+        const resEmpresas = await fetch("http://localhost:3000/empresas");
+        if (resEmpresas.ok) {
+          const empresas = await resEmpresas.json();
+          const userName = (data.usuario.nombre || "").trim().toLowerCase();
+          let empresa = empresas.find(
+            (e) => e.nombre.trim().toLowerCase() === userName
+          );
+          if (!empresa) {
+            empresa = empresas.find(
+              (e) =>
+                e.nombre.trim().toLowerCase().includes(userName) ||
+                userName.includes(e.nombre.trim().toLowerCase())
+            );
+          }
+          if (empresa) {
+            localStorage.setItem("id_empresa", empresa.id_empresa.toString());
+          }
+        }
+      } catch (e) {
+        console.error("Error resolviendo empresa en login:", e);
+      }
       router.push("/empresa");
     } else {
       router.push("/inicio");

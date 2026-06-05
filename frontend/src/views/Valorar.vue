@@ -13,25 +13,27 @@
           placeholder="Nombre de la empresa (ej. Diana, Siman...)" 
           style="flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 1rem;"
         >
-        <button class="btn-primary" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-magnifying-glass"></i> Buscar Empresa
-        </button>
       </section>
 
-      <section class="companies-grid" id="valorar-companies-grid">
+      <!-- Loading state -->
+      <p v-if="cargando" style="text-align: center; color: #888; font-size: 1.1rem; padding: 40px 0;">
+        <i class="fa-solid fa-spinner fa-spin"></i> Cargando empresas...
+      </p>
+
+      <section v-else class="companies-grid" id="valorar-companies-grid">
         <article 
           v-for="company in filteredCompanies" 
-          :key="company.key"
-          @click="irADetalle(company.key)" 
+          :key="company.id_empresa"
+          @click="irADetalle(company.id_empresa)" 
           class="company-card"
         >
-          <div class="company-logo-box" :style="{ backgroundColor: company.color }">{{ company.logo }}</div>
+          <div class="company-logo-box" :style="{ backgroundColor: generarColor(company.nombre) }">{{ generarLogo(company.nombre) }}</div>
           <div class="company-info">
             <h3 style="font-weight: bold; color: #333;">{{ company.nombre }}</h3>
             <div class="stars-yellow">
-              <i v-for="n in 5" :key="n" :class="getStarClass(n, company.stars)"></i>
+              <i v-for="n in 5" :key="n" :class="getStarClass(n, parseFloat(company.calificacion_promedio || 0))"></i>
             </div>
-            <small>{{ company.evaluacionesCount }} evaluaciones</small>
+            <small>{{ company.ubicacion || 'Sin ubicación' }}</small>
           </div>
         </article>
 
@@ -44,52 +46,32 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCandidate from '../components/NavbarCandidate.vue'
 
 const router = useRouter()
 const searchQuery = ref('')
+const companies = ref([])
+const cargando = ref(true)
 
-const companies = [
-  {
-    key: 'diana',
-    nombre: 'Diana',
-    logo: 'DIANA',
-    color: '#f39c12',
-    stars: 4.0,
-    evaluacionesCount: 300
-  },
-  {
-    key: 'siman',
-    nombre: 'Siman',
-    logo: 'SIMAN',
-    color: '#c8102e',
-    stars: 4.5,
-    evaluacionesCount: 450
-  },
-  {
-    key: 'dollarcity',
-    nombre: 'Dollarcity',
-    logo: 'D-CITY',
-    color: '#005a32',
-    stars: 4.0,
-    evaluacionesCount: 120
-  },
-  {
-    key: 'selectos',
-    nombre: 'Súper Selectos',
-    logo: 'S. SELECTOS',
-    color: '#004a99',
-    stars: 3.0,
-    evaluacionesCount: 500
+onMounted(async () => {
+  try {
+    const response = await fetch('http://localhost:3000/empresas')
+    if (response.ok) {
+      companies.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Error cargando empresas:', err)
+  } finally {
+    cargando.value = false
   }
-]
+})
 
 const filteredCompanies = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
-  if (!query) return companies
-  return companies.filter(c => c.nombre.toLowerCase().includes(query))
+  if (!query) return companies.value
+  return companies.value.filter(c => c.nombre.toLowerCase().includes(query))
 })
 
 const getStarClass = (n, stars) => {
@@ -102,8 +84,27 @@ const getStarClass = (n, stars) => {
   }
 }
 
-const irADetalle = (key) => {
-  router.push(`/empresas/detalle/${key}`)
+// Genera un color determinístico basado en el nombre de la empresa
+const generarColor = (nombre) => {
+  const colores = ['#1e3a8a', '#c8102e', '#005a32', '#004a99', '#f39c12', '#6b21a8', '#0d6efd', '#dc3545', '#198754', '#e85d04']
+  let hash = 0
+  for (let i = 0; i < nombre.length; i++) {
+    hash = nombre.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return colores[Math.abs(hash) % colores.length]
+}
+
+// Genera un logo (iniciales o abreviatura) basado en el nombre
+const generarLogo = (nombre) => {
+  const words = nombre.trim().split(/\s+/)
+  if (words.length === 1) {
+    return nombre.substring(0, 3).toUpperCase()
+  }
+  return words.map(w => w[0]).join('').toUpperCase().substring(0, 4)
+}
+
+const irADetalle = (id) => {
+  router.push(`/empresas/detalle/${id}`)
 }
 </script>
 

@@ -78,12 +78,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavbarCompany from '../components/NavbarCompany.vue'
+import { resolveEmpresaId } from '../utils/empresaUtils'
 
 const route = useRoute()
 const router = useRouter()
 
 const titulo = ref('')
-const idEmpresaInput = ref(2)
+const idEmpresaInput = ref(null)
 const departamentoSeleccionado = ref('')
 const direccionDetalle = ref('')
 const descripcion = ref('')
@@ -105,33 +106,12 @@ const editId = computed(() => route.query.edit)
 const editMode = computed(() => !!editId.value)
 
 const cargarDatos = async () => {
-  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
-  if (!userJson) {
+  const idEmpresa = await resolveEmpresaId()
+  if (!idEmpresa) {
     router.push('/')
     return
   }
-  
-  let user
-  try {
-    user = JSON.parse(userJson)
-  } catch (e) {
-    router.push('/')
-    return
-  }
-
-  // Pre-llenar ID Empresa según el usuario corporativo logueado
-  const email = (user.correo || user.email || '').toLowerCase()
-  const name = (user.nombre || '').toLowerCase()
-  
-  let mappedId = 2
-  if (email.includes('siman') || name.includes('siman')) {
-    mappedId = 4
-  } else if (email.includes('dollarcity') || name.includes('dollarcity') || email.includes('d-city')) {
-    mappedId = 5
-  } else if (email.includes('selectos') || name.includes('selectos')) {
-    mappedId = 6
-  }
-  idEmpresaInput.value = mappedId
+  idEmpresaInput.value = idEmpresa
 
   // Si estamos en modo edición, cargar la vacante
   if (editMode.value) {
@@ -141,7 +121,7 @@ const cargarDatos = async () => {
         const v = await res.json()
         if (v) {
           titulo.value = v.titulo || ''
-          idEmpresaInput.value = v.id_empresa || mappedId
+          idEmpresaInput.value = v.id_empresa || idEmpresa
           const rawUbicacion = v.ubicacion || ''
           const parts = rawUbicacion.split(',')
           if (parts.length > 1) {
@@ -218,9 +198,24 @@ const guardarVacante = async () => {
     esError.value = false
     mensajeEstado.value = editMode.value ? '¡Vacante actualizada con éxito!' : '¡Vacante publicada con éxito!'
     
-    setTimeout(() => {
-      router.push('/empresa/gestion')
-    }, 1500)
+    if (editMode.value) {
+      setTimeout(() => {
+        router.push('/empresa/gestion')
+      }, 1500)
+    } else {
+      // Limpiar formulario para permitir crear otra vacante
+      titulo.value = ''
+      departamentoSeleccionado.value = ''
+      direccionDetalle.value = ''
+      descripcion.value = ''
+      requisitos.value = ''
+      tipoContrato.value = 'tiempo_completo'
+      modalidad.value = 'presencial'
+      
+      setTimeout(() => {
+        mensajeEstado.value = ''
+      }, 4500)
+    }
 
   } catch (err) {
     console.error(err)

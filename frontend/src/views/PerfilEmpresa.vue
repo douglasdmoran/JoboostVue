@@ -67,6 +67,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCompany from '../components/NavbarCompany.vue'
+import { resolveEmpresaId, generarLogo, generarColor } from '../utils/empresaUtils'
 
 const router = useRouter()
 
@@ -83,7 +84,7 @@ const esError = ref(false)
 const cargando = ref(false)
 
 let idUsuario = null
-let idEmpresa = 2 // por defecto Diana
+let idEmpresa = null
 
 const cargarDatos = async () => {
   const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
@@ -102,27 +103,12 @@ const cargarDatos = async () => {
     return
   }
 
-  // Mapear según correo/nombre
-  const email = (user.correo || user.email || '').toLowerCase()
-  const name = (user.nombre || '').toLowerCase()
-  
-  if (email.includes('siman') || name.includes('siman')) {
-    idEmpresa = 4
-    logoTexto.value = 'SIMAN'
-    logoColor.value = '#c8102e'
-  } else if (email.includes('dollarcity') || name.includes('dollarcity') || email.includes('d-city')) {
-    idEmpresa = 5
-    logoTexto.value = 'D-CITY'
-    logoColor.value = '#005a32'
-  } else if (email.includes('selectos') || name.includes('selectos')) {
-    idEmpresa = 6
-    logoTexto.value = 'S. SELECTOS'
-    logoColor.value = '#004a99'
-  } else {
-    idEmpresa = 2
-    logoTexto.value = 'DIANA'
-    logoColor.value = '#e30613'
+  const resolved = await resolveEmpresaId()
+  if (!resolved) {
+    router.push('/')
+    return
   }
+  idEmpresa = resolved
 
   try {
     const res = await fetch(`http://localhost:3000/empresas`)
@@ -130,6 +116,9 @@ const cargarDatos = async () => {
       const empresas = await res.json()
       const empresa = empresas.find(e => e.id_empresa === idEmpresa)
       if (empresa) {
+        logoTexto.value = generarLogo(empresa.nombre)
+        logoColor.value = generarColor(empresa.nombre)
+
         // Intentar parsear teléfono y correo soporte de la descripción
         const desc = empresa.descripcion || ''
         const telMatch = desc.match(/Tel:\s*([^\s.]+)/)

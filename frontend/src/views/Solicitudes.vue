@@ -58,39 +58,17 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCompany from '../components/NavbarCompany.vue'
+import { resolveEmpresaId } from '../utils/empresaUtils'
 
 const router = useRouter()
 
 const listaSolicitudes = ref([])
 
-let idEmpresa = 2
-
 const cargarSolicitudes = async () => {
-  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
-  if (!userJson) {
+  const idEmpresa = await resolveEmpresaId()
+  if (!idEmpresa) {
     router.push('/')
     return
-  }
-  
-  let user
-  try {
-    user = JSON.parse(userJson)
-  } catch (e) {
-    router.push('/')
-    return
-  }
-
-  const email = (user.correo || user.email || '').toLowerCase()
-  const name = (user.nombre || '').toLowerCase()
-
-  if (email.includes('siman') || name.includes('siman')) {
-    idEmpresa = 4
-  } else if (email.includes('dollarcity') || name.includes('dollarcity') || email.includes('d-city')) {
-    idEmpresa = 5
-  } else if (email.includes('selectos') || name.includes('selectos')) {
-    idEmpresa = 6
-  } else {
-    idEmpresa = 2
   }
 
   try {

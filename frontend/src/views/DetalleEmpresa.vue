@@ -137,6 +137,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavbarCandidate from '../components/NavbarCandidate.vue'
 import JobCard from '../components/JobCard.vue'
+import { generarLogo, generarColor } from '../utils/empresaUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -150,48 +151,70 @@ const estadoEvaluacion = ref('')
 const listaOfertas = ref([])
 const listaEvaluaciones = ref([])
 
-const database = {
-  'diana': {
-    id_db: 2,
-    nombre: 'PRODUCTOS ALIMENTICIOS DIANA, S.A. DE C.V.',
-    rubro: 'Empresa de consumo masivo con más de 4000 colaboradores',
-    color: '#f39c12',
-    logo: 'DIANA',
-    info: 'En Diana nacimos para estar cerca de ti. Esta frase nos mueve a los más de 4,000 colaboradores en la región para hacer realidad este compromiso que nos engrandece.'
-  },
-  'siman': {
-    id_db: 4,
-    nombre: 'ALMACENES SIMAN, S.A. DE C.V.',
-    rubro: 'Retail y grandes almacenes',
-    color: '#c8102e',
-    logo: 'SIMAN',
-    info: 'Almacenes SIMAN es una empresa salvadoreña con más de 100 años de historia, líder en moda y hogar con altos estándares de servicio.'
-  },
-  'dollarcity': {
-    id_db: 5,
-    nombre: 'DOLLARCITY EL SALVADOR',
-    rubro: 'Retail de artículos variados',
-    color: '#005a32',
-    logo: 'D-CITY',
-    info: 'Agregamos valor a nuestros clientes a través de una experiencia de compra divertida y productos innovadores a precios increíbles.'
-  },
-  'selectos': {
-    id_db: 6,
-    nombre: 'SÚPER SELECTOS (CALLEJA S.A. DE C.V.)',
-    rubro: 'Cadena de supermercados',
-    color: '#004a99',
-    logo: 'S. SELECTOS',
-    info: 'Super Selectos es la cadena líder de supermercados en El Salvador, comprometida con la calidad y el desarrollo de las familias.'
-  }
-}
-
 const companyKey = computed(() => {
   return route.params.key || route.query.empresa || 'diana'
 })
 
-const companyData = computed(() => {
-  return database[companyKey.value]
-})
+const companyData = ref(null)
+
+const loadCompany = async () => {
+  const key = companyKey.value
+  try {
+    const response = await fetch('http://localhost:3000/empresas')
+    if (response.ok) {
+      const empresas = await response.json()
+      let empresa = null
+      
+      const parsedId = parseInt(key, 10)
+      if (!isNaN(parsedId)) {
+        empresa = empresas.find(e => e.id_empresa === parsedId)
+      } else {
+        // Fallback para claves string antiguas como 'diana', 'siman', etc.
+        empresa = empresas.find(e => e.nombre.toLowerCase().includes(key.toLowerCase()))
+      }
+      
+      if (empresa) {
+        // Parsear rubro y descripción limpia
+        let rubro = 'Empresa'
+        let info = empresa.descripcion || ''
+        
+        // Si tiene la estructura [CULTURA] ... [PROPOSITO]
+        const culturaMatch = info.match(/\[CULTURA\]([\s\S]*?)(?:\[PROPOSITO\]|$)/)
+        const propositoMatch = info.match(/\[PROPOSITO\]([\s\S]*?)$/)
+        
+        if (culturaMatch || propositoMatch) {
+          info = ''
+          if (culturaMatch && culturaMatch[1].trim()) {
+            info += `Nuestra cultura:\n${culturaMatch[1].trim()}\n\n`
+          }
+          if (propositoMatch && propositoMatch[1].trim()) {
+            info += `Nuestro propósito:\n${propositoMatch[1].trim()}`
+          }
+        } else {
+          const sectorMatch = info.match(/Sector:\s*([^.\n]+)/i)
+          if (sectorMatch) {
+            rubro = sectorMatch[1].trim()
+          }
+          info = info.replace(/Sector:\s*[^.\n]+(?:[.\n]|$)/i, '')
+          info = info.replace(/Email:\s*[^\s.]+(?:\s|$)/i, '')
+          info = info.replace(/Tel:\s*[^\s.]+(?:\s|$)/i, '')
+          info = info.trim() || 'Sin descripción disponible.'
+        }
+        
+        companyData.value = {
+          id_db: empresa.id_empresa,
+          nombre: empresa.nombre,
+          rubro: rubro,
+          color: generarColor(empresa.nombre),
+          logo: generarLogo(empresa.nombre),
+          info: info
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error cargando detalle de empresa:', e)
+  }
+}
 
 const formatearFecha = (iso) => {
   if (!iso) return '—'
@@ -272,9 +295,12 @@ const publicarEvaluacion = async () => {
   }
 }
 
-const loadAll = () => {
-  cargarOfertas()
-  cargarEvaluaciones()
+const loadAll = async () => {
+  await loadCompany()
+  if (companyData.value) {
+    cargarOfertas()
+    cargarEvaluaciones()
+  }
 }
 
 onMounted(() => {

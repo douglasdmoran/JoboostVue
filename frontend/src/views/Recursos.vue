@@ -3,11 +3,8 @@
     <NavbarCandidate />
     
     <main class="container">
-      <div class="forum-top-bar" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 40px;">
+      <div class="forum-top-bar" style="margin-bottom: 40px;">
         <h1 style="font-size: 2.5rem; font-weight: bold; color: #333;">Recursos</h1>
-        <a href="#" @click.prevent style="color: var(--azul-jobboost); text-decoration: none; font-weight: 500;">
-          <i class="fa-solid fa-file-circle-plus"></i> Publicar recursos
-        </a>
       </div>
 
       <section class="resources-list" style="display: flex; flex-direction: column; gap: 30px;">

@@ -113,7 +113,16 @@
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
-          <button class="btn-primary" @click="descargarPlantilla" style="cursor: pointer;"><i class="fa-solid fa-download"></i> Descargar Plantilla Word</button>
+          <button 
+            @click="descargarPlantilla"
+            class="btn-primary" 
+            style="cursor: pointer; text-decoration: none; display: inline-block; padding: 12px 30px; font-size: 1.1rem; border-radius: 6px; border: none;"
+          >
+            <i class="fa-solid fa-file-word"></i> Descargar Plantilla Word (.docx)
+          </button>
+          <p style="margin-top: 12px; color: #888; font-size: 0.9rem;">
+            Compatible con Microsoft Word, Google Docs y LibreOffice. Puedes subir el archivo a Google Drive para editarlo en línea.
+          </p>
         </div>
       </section>
     </main>
@@ -122,9 +131,138 @@
 
 <script setup>
 import NavbarCandidate from '../components/NavbarCandidate.vue'
+import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, TabStopPosition, TabStopType } from 'docx'
+import { saveAs } from 'file-saver'
 
-const descargarPlantilla = () => {
-  alert('Funcionalidad de descarga de plantilla en desarrollo.')
+function descargarPlantilla() {
+  const FONT = 'Times New Roman'
+  const SIZE_NAME = 28       // 14pt
+  const SIZE_NORMAL = 22     // 11pt
+  const SIZE_SECTION = 22    // 11pt
+
+  const sectionDivider = () => new Paragraph({
+    spacing: { before: 200, after: 80 },
+    border: {
+      bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+    },
+    children: []
+  })
+
+  const sectionTitle = (text) => new Paragraph({
+    spacing: { before: 200, after: 60 },
+    border: {
+      bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+    },
+    children: [
+      new TextRun({ text: text.toUpperCase(), bold: true, font: FONT, size: SIZE_SECTION })
+    ]
+  })
+
+  const entryHeader = (left, right) => new Paragraph({
+    spacing: { before: 80, after: 0 },
+    tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+    children: [
+      new TextRun({ text: left, bold: true, font: FONT, size: SIZE_NORMAL }),
+      new TextRun({ text: '\t', font: FONT, size: SIZE_NORMAL }),
+      new TextRun({ text: right, font: FONT, size: SIZE_NORMAL })
+    ]
+  })
+
+  const entrySubheader = (left, right) => new Paragraph({
+    spacing: { before: 0, after: 40 },
+    tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+    children: [
+      new TextRun({ text: left, italics: true, font: FONT, size: SIZE_NORMAL }),
+      new TextRun({ text: '\t', font: FONT, size: SIZE_NORMAL }),
+      new TextRun({ text: right, italics: true, font: FONT, size: SIZE_NORMAL })
+    ]
+  })
+
+  const bulletPoint = (text) => new Paragraph({
+    spacing: { before: 20, after: 20 },
+    bullet: { level: 0 },
+    children: [
+      new TextRun({ text, font: FONT, size: SIZE_NORMAL })
+    ]
+  })
+
+  const skillLine = (label, value) => new Paragraph({
+    spacing: { before: 20, after: 20 },
+    bullet: { level: 0 },
+    children: [
+      new TextRun({ text: label, bold: true, font: FONT, size: SIZE_NORMAL }),
+      new TextRun({ text: ' ' + value, font: FONT, size: SIZE_NORMAL })
+    ]
+  })
+
+  const doc = new Document({
+    sections: [{
+      properties: {
+        page: {
+          margin: { top: 720, bottom: 720, left: 1080, right: 1080 }
+        }
+      },
+      children: [
+        // Nombre
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 40 },
+          children: [
+            new TextRun({ text: 'TU NOMBRE COMPLETO', bold: true, font: FONT, size: SIZE_NAME })
+          ]
+        }),
+        // Contacto
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 40 },
+          border: {
+            bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' }
+          },
+          children: [
+            new TextRun({ text: 'Tu Ciudad, País | +503 0000-0000 | tu.correo@email.com | linkedin.com/in/tuperfil', font: FONT, size: SIZE_NORMAL })
+          ]
+        }),
+
+        // EDUCACIÓN
+        sectionTitle('Educación'),
+        entryHeader('Nombre de tu Universidad', 'Ciudad, País'),
+        entrySubheader('Tu Carrera o Título', 'Mes Año - Mes Año'),
+        bulletPoint('Promedio Acumulado (CUM): X.X/10'),
+        bulletPoint('Logros relevantes: Becas, reconocimientos, etc.'),
+
+        // EXPERIENCIA
+        sectionTitle('Experiencia'),
+        entryHeader('Nombre de la Empresa', 'Ciudad, País'),
+        entrySubheader('Tu Cargo / Puesto', 'Mes Año - Mes Año'),
+        bulletPoint('Describe tu logro principal con un verbo de acción. Ejemplo: "Desarrollé un sistema de reportes que redujo el tiempo de procesamiento en un 40%."'),
+        bulletPoint('Describe otra responsabilidad o logro cuantificable.'),
+        bulletPoint('Incluye métricas y resultados concretos siempre que sea posible.'),
+
+        sectionDivider(),
+        entryHeader('Otra Empresa o Experiencia', 'Ciudad, País'),
+        entrySubheader('Otro Cargo', 'Mes Año - Mes Año'),
+        bulletPoint('Describe tus responsabilidades y logros usando el método CAR (Contexto, Acción, Resultado).'),
+        bulletPoint('Cuantifica tus aportes con números, porcentajes o montos.'),
+
+        // PROYECTOS Y LIDERAZGO
+        sectionTitle('Proyectos Académicos y Liderazgo'),
+        entryHeader('Nombre del Proyecto o Organización', 'Ciudad, País'),
+        entrySubheader('Tu Rol / Posición', 'Mes Año - Mes Año'),
+        bulletPoint('Describe tu rol de liderazgo y los resultados obtenidos.'),
+        bulletPoint('Menciona el impacto: personas lideradas, presupuesto gestionado, etc.'),
+
+        // HABILIDADES
+        sectionTitle('Habilidades'),
+        skillLine('Lenguajes y Tecnologías:', 'Escribe tus tecnologías separadas por comas (ej: JavaScript, Python, SQL).'),
+        skillLine('Herramientas:', 'Escribe las herramientas que dominas (ej: Git, Docker, Figma).'),
+        skillLine('Idiomas:', 'Español (Nativo), Inglés (Nivel - ej: B2, C1).'),
+      ]
+    }]
+  })
+
+  Packer.toBlob(doc).then(blob => {
+    saveAs(blob, 'Plantilla_CV_Harvard.docx')
+  })
 }
 </script>
 

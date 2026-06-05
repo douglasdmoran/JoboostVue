@@ -129,23 +129,24 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCompany from '../components/NavbarCompany.vue'
+import { resolveEmpresaId, generarLogo, generarColor } from '../utils/empresaUtils'
 
 const router = useRouter()
 
 const activeTab = ref('tab-empresa')
 
-const logoTexto = ref('DIANA')
-const logoColor = ref('#e30613')
-const nombreEmpresa = ref('PRODUCTOS ALIMENTICIOS DIANA, S.A. DE C.V.')
+const logoTexto = ref('')
+const logoColor = ref('#1e3a8a')
+const nombreEmpresa = ref('')
 const promedioCalificacion = ref('4.5')
 
-const textoCultura = ref('Nuestra convicción de crecer con equipos ganadores nos impulsa a buscar líderes como tú, comprometidos con el resultado final, persiguiendo la excelencia en cada acción...')
-const textoProposito = ref('En Diana nacimos para estar cerca de ti. Y esa frase, que parece tan simple, nos mueve a los más de 4,000 colaboradores en la región...')
+const textoCultura = ref('Nuestra cultura se basa en el trabajo en equipo, la innovación constante y el desarrollo profesional de nuestros colaboradores. Buscamos siempre la excelencia en cada acción.')
+const textoProposito = ref('Nuestro propósito es generar valor para nuestros clientes, colaboradores y la sociedad, impulsando el crecimiento sostenible y el bienestar de la comunidad.')
 
 const listaOfertas = ref([])
 const listaEvaluaciones = ref([])
 
-let idEmpresa = 2
+let idEmpresa = null
 let empresaRecord = null
 
 const formatearFecha = (iso) => {
@@ -171,44 +172,12 @@ const getCargoSimulado = (evaluacion) => {
 }
 
 const cargarDatos = async () => {
-  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
-  if (!userJson) {
+  const resolved = await resolveEmpresaId()
+  if (!resolved) {
     router.push('/')
     return
   }
-  
-  let user
-  try {
-    user = JSON.parse(userJson)
-  } catch (e) {
-    router.push('/')
-    return
-  }
-
-  const email = (user.correo || user.email || '').toLowerCase()
-  const name = (user.nombre || '').toLowerCase()
-
-  if (email.includes('siman') || name.includes('siman')) {
-    idEmpresa = 4
-    logoTexto.value = 'SIMAN'
-    logoColor.value = '#c8102e'
-    nombreEmpresa.value = 'ALMACENES SIMAN, S.A. DE C.V.'
-  } else if (email.includes('dollarcity') || name.includes('dollarcity') || email.includes('d-city')) {
-    idEmpresa = 5
-    logoTexto.value = 'D-CITY'
-    logoColor.value = '#005a32'
-    nombreEmpresa.value = 'DOLLARCITY EL SALVADOR'
-  } else if (email.includes('selectos') || name.includes('selectos')) {
-    idEmpresa = 6
-    logoTexto.value = 'S. SELECTOS'
-    logoColor.value = '#004a99'
-    nombreEmpresa.value = 'SÚPER SELECTOS (CALLEJA S.A. DE C.V.)'
-  } else {
-    idEmpresa = 2
-    logoTexto.value = 'DIANA'
-    logoColor.value = '#e30613'
-    nombreEmpresa.value = 'PRODUCTOS ALIMENTICIOS DIANA, S.A. DE C.V.'
-  }
+  idEmpresa = resolved
 
   try {
     // 1. Cargar datos de la empresa (cultura, proposito)
@@ -217,6 +186,10 @@ const cargarDatos = async () => {
       const empresas = await resEmp.json()
       empresaRecord = empresas.find(e => e.id_empresa === idEmpresa)
       if (empresaRecord) {
+        nombreEmpresa.value = empresaRecord.nombre
+        logoTexto.value = generarLogo(empresaRecord.nombre)
+        logoColor.value = generarColor(empresaRecord.nombre)
+
         const desc = empresaRecord.descripcion || ''
         
         const culturaMatch = desc.match(/\[CULTURA\]([\s\S]*?)(?:\[PROPOSITO\]|$)/)

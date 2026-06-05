@@ -47,34 +47,16 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavbarCompany from '../components/NavbarCompany.vue'
+import { resolveEmpresaId } from '../utils/empresaUtils'
 
 const router = useRouter()
 const listaVacantesResumen = ref([])
 
 const cargarDatos = async () => {
-  const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
-  if (!userJson) {
+  const idEmpresa = await resolveEmpresaId()
+  if (!idEmpresa) {
     router.push('/')
     return
-  }
-  
-  let user
-  try {
-    user = JSON.parse(userJson)
-  } catch (e) {
-    return
-  }
-  
-  // Mapear el usuario a la empresa correspondiente según nombre o correo
-  let idEmpresa = 2 // Por defecto: Diana
-  const email = (user.correo || user.email || '').toLowerCase()
-  const name = (user.nombre || '').toLowerCase()
-  if (email.includes('siman') || name.includes('siman')) {
-    idEmpresa = 4
-  } else if (email.includes('dollarcity') || name.includes('dollarcity') || email.includes('d-city')) {
-    idEmpresa = 5
-  } else if (email.includes('selectos') || name.includes('selectos')) {
-    idEmpresa = 6
   }
 
   try {
