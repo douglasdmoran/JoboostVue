@@ -57,9 +57,14 @@
           font-weight: bold;
           color: #fff;
           background: #0033ff;
+          overflow: hidden;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
         "
       >
-        {{ usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : "P" }}
+        <img v-if="usuario && usuario.foto_url" :src="usuario.foto_url" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" />
+        <span v-else>{{ usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : "P" }}</span>
       </div>
       <span class="user-label">{{ primerNombre }}</span>
 

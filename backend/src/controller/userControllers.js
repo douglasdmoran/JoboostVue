@@ -63,12 +63,12 @@ export const postLoginUsuario = async (req, res, next) => {
 export const putActualizarUsuario = async (req, res, next) => {
     try {
         const { id } = req.params;
-        let { nombre, email, contrasenia, rol } = req.body;
+        let { nombre, email, contrasenia, rol, foto_url } = req.body;
         if (rol) {
             rol = rol.toLowerCase();
             if (rol === 'admin') rol = 'gestor';
         }
-        const updatedUser = await userService.updateUser(id, nombre, email, contrasenia, rol);
+        const updatedUser = await userService.updateUser(id, nombre, email, contrasenia, rol, foto_url);
         if (!updatedUser) {
             const error = new Error('No se pudo actualizar, usuario no encontrado');
             error.statusCode = 404;

@@ -4,9 +4,10 @@
     
     <main class="container" v-if="companyData">
       <!-- Banner -->
-      <section class="company-banner">
-        <div class="company-logo-box bg-diana" :style="{ backgroundColor: companyData.color, fontSize: '1.2rem', width: '90px', height: '90px' }">
-          {{ companyData.logo }}
+      <section class="company-banner" style="display: flex; align-items: center;">
+        <div class="company-logo-box" :style="{ backgroundColor: companyData.logo_url ? 'transparent' : companyData.color, fontSize: '1.2rem', width: '90px', height: '90px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid #eee' }">
+          <img v-if="companyData.logo_url" :src="companyData.logo_url" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+          <span v-else>{{ companyData.logo }}</span>
         </div>
         <div class="banner-details">
           <h2 style="font-size: 2rem; font-weight: bold; color: #333; margin-bottom: 5px;">{{ companyData.nombre }}</h2>
@@ -207,6 +208,7 @@ const loadCompany = async () => {
           rubro: rubro,
           color: generarColor(empresa.nombre),
           logo: generarLogo(empresa.nombre),
+          logo_url: empresa.logo_url || '',
           info: info
         }
       }

@@ -2,7 +2,7 @@ import { pool } from '../db.js';
 
 export const getAllVacantes = async () => {
     const result = await pool.query(`
-        SELECT v.*, e.nombre as empresa_nombre 
+        SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
         FROM vacantes v
         LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
         ORDER BY v.fecha_publicacion DESC
@@ -12,7 +12,7 @@ export const getAllVacantes = async () => {
 
 export const getVacanteById = async (id_vacante) => {
     const result = await pool.query(
-        `SELECT v.*, e.nombre as empresa_nombre 
+        `SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
          FROM vacantes v
          LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
          WHERE v.id_vacante = $1`,
@@ -23,7 +23,7 @@ export const getVacanteById = async (id_vacante) => {
 
 export const getVacantesPorTitulo = async (titulo) => {
     const result = await pool.query(
-        `SELECT v.*, e.nombre as empresa_nombre 
+        `SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
          FROM vacantes v
          LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
          WHERE v.titulo ILIKE $1 AND v.activa = true
@@ -35,7 +35,7 @@ export const getVacantesPorTitulo = async (titulo) => {
 
 export const getVacantesPorUbicacion = async (ubicacion) => {
     const result = await pool.query(
-        `SELECT v.*, e.nombre as empresa_nombre 
+        `SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
          FROM vacantes v
          LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
          WHERE v.ubicacion ILIKE $1 AND v.activa = true
@@ -47,7 +47,7 @@ export const getVacantesPorUbicacion = async (ubicacion) => {
 
 export const getVacantesPorModalidad = async (modalidad) => {
     const result = await pool.query(
-        `SELECT v.*, e.nombre as empresa_nombre 
+        `SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
          FROM vacantes v
          LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
          WHERE v.modalidad = $1 AND v.activa = true
@@ -59,7 +59,7 @@ export const getVacantesPorModalidad = async (modalidad) => {
 
 export const getVacantesPorTipoContrato = async (tipo_contrato) => {
     const result = await pool.query(
-        `SELECT v.*, e.nombre as empresa_nombre 
+        `SELECT v.*, e.nombre as empresa_nombre, e.logo_url as empresa_logo_url
          FROM vacantes v
          LEFT JOIN empresas e ON v.id_empresa = e.id_empresa
          WHERE v.tipo_contrato = $1 AND v.activa = true

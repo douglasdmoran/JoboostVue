@@ -141,10 +141,12 @@
       <section class="image-side">
         <div class="img-placeholder-container" style="text-align: center;">
           <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #1e293b;">Foto de Perfil</h3>
-          <div class="img-placeholder-box" style="display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #aaa; background: #e2e8f0; width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 20px; border: 1px solid #ccc;">
-            {{ iniciales }}
+          <div class="img-placeholder-box" style="display: flex; align-items: center; justify-content: center; width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 20px; border: 1px solid #ccc; overflow: hidden; background: #e2e8f0;">
+            <img v-if="fotoUrl" :src="fotoUrl" alt="Foto de perfil" style="width: 100%; height: 100%; object-fit: cover;" />
+            <span v-else style="font-size: 4rem; color: #aaa;">{{ iniciales }}</span>
           </div>
-          <button @click="editarFoto" type="button" class="btn-secondary" style="cursor: pointer;">
+          <input type="file" ref="fileInputRef" @change="handlePhotoUpload" accept="image/*" style="display: none;">
+          <button @click="triggerFileInput" type="button" class="btn-secondary" style="cursor: pointer;">
             <i class="fa-solid fa-upload"></i> Actualizar Foto
           </button>
         </div>
@@ -163,6 +165,8 @@ const router = useRouter()
 const nombre = ref('')
 const correo = ref('')
 const idUsuario = ref(null)
+const fotoUrl = ref('')
+const fileInputRef = ref(null)
 
 const misPostulaciones = ref([])
 const misForos = ref([])
@@ -178,6 +182,28 @@ const iniciales = computed(() => {
   return parts[0].charAt(0).toUpperCase()
 })
 
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
+  }
+}
+
+const handlePhotoUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('La imagen es demasiado grande. El límite es de 2MB.')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    fotoUrl.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
 const checkSession = () => {
   const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
   if (!userJson) {
@@ -191,6 +217,7 @@ const checkSession = () => {
     nombre.value = user.nombre
     correo.value = user.correo || user.email
     idUsuario.value = user.id_usuario
+    fotoUrl.value = user.foto_url || ''
     return true
   } catch (e) {
     router.push('/')
@@ -204,12 +231,37 @@ const formatearFecha = (iso) => {
   return d.toLocaleDateString('es-SV', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-const guardarCambios = () => {
-  alert('Información de perfil actualizada con éxito!')
-}
+const guardarCambios = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/users/${idUsuario.value}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        nombre: nombre.value.trim(),
+        email: correo.value.trim(),
+        foto_url: fotoUrl.value
+      })
+    })
 
-const editarFoto = () => {
-  alert('Funcionalidad de carga de fotos en desarrollo.')
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.message || 'Error al guardar cambios.')
+    }
+
+    const updatedUser = await response.json()
+    localStorage.setItem('usuario', JSON.stringify(updatedUser))
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser))
+    
+    // Disparar evento storage de forma artificial para sincronizar navbars
+    window.dispatchEvent(new Event('storage'))
+
+    alert('¡Información de perfil actualizada con éxito!')
+    checkSession()
+  } catch (err) {
+    alert(err.message)
+  }
 }
 
 const cargarPostulaciones = async () => {

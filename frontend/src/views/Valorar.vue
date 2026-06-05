@@ -27,7 +27,10 @@
           @click="irADetalle(company.id_empresa)" 
           class="company-card"
         >
-          <div class="company-logo-box" :style="{ backgroundColor: generarColor(company.nombre) }">{{ generarLogo(company.nombre) }}</div>
+          <div class="company-logo-box" :style="{ backgroundColor: company.logo_url ? 'transparent' : generarColor(company.nombre), overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }">
+            <img v-if="company.logo_url" :src="company.logo_url" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+            <span v-else>{{ generarLogo(company.nombre) }}</span>
+          </div>
           <div class="company-info">
             <h3 style="font-weight: bold; color: #333;">{{ company.nombre }}</h3>
             <div class="stars-yellow">

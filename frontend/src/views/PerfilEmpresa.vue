@@ -42,13 +42,15 @@
             <div class="img-placeholder-container" style="text-align: center;">
                 <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #1e293b;">Logo Corporativo</h3>
                 
-                <div class="img-placeholder-box" :style="{ border: '2px dashed var(--azul-jobboost)', background: '#f0f4ff' }">
-                    <div :style="{ backgroundColor: logoColor, padding: '15px', borderRadius: '8px', border: '3px solid #fecb00', color: 'white', fontWeight: 'bold', fontStyle: 'italic' }">
+                <div class="img-placeholder-box" style="border: 2px dashed var(--azul-jobboost); background: #f0f4ff; display: flex; align-items: center; justify-content: center; width: 150px; height: 150px; margin: 0 auto 20px auto; border-radius: 12px; overflow: hidden;">
+                    <img v-if="logoUrl" :src="logoUrl" alt="Logo corporativo" style="width: 100%; height: 100%; object-fit: contain;" />
+                    <div v-else :style="{ backgroundColor: logoColor, padding: '15px', borderRadius: '8px', border: '3px solid #fecb00', color: 'white', fontWeight: 'bold', fontStyle: 'italic', fontSize: '1.2rem' }">
                         {{ logoTexto }}
                     </div>
                 </div>
                 
-                <button type="button" @click="actualizarLogoSimulado" class="btn-secondary" style="margin-bottom: 20px;">
+                <input type="file" ref="fileInputRef" @change="handleLogoUpload" accept="image/*" style="display: none;">
+                <button type="button" @click="triggerFileInput" class="btn-secondary" style="margin-bottom: 20px;">
                     <i class="fa-solid fa-upload"></i> Actualizar Logo
                 </button>
 
@@ -78,6 +80,8 @@ const password = ref('')
 
 const logoTexto = ref('DIANA')
 const logoColor = ref('#e30613')
+const logoUrl = ref('')
+const fileInputRef = ref(null)
 
 const mensajeEstado = ref('')
 const esError = ref(false)
@@ -85,6 +89,28 @@ const cargando = ref(false)
 
 let idUsuario = null
 let idEmpresa = null
+
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click()
+  }
+}
+
+const handleLogoUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('La imagen es demasiado grande. El límite es de 2MB.')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    logoUrl.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
 
 const cargarDatos = async () => {
   const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
@@ -118,6 +144,7 @@ const cargarDatos = async () => {
       if (empresa) {
         logoTexto.value = generarLogo(empresa.nombre)
         logoColor.value = generarColor(empresa.nombre)
+        logoUrl.value = empresa.logo_url || ''
 
         // Intentar parsear teléfono y correo soporte de la descripción
         const desc = empresa.descripcion || ''
@@ -189,11 +216,15 @@ const guardarCambios = async () => {
             descripcion: nuevaDesc,
             ubicacion: empresa.ubicacion,
             sitio_web: empresa.sitio_web,
-            calificacion_promedio: empresa.calificacion_promedio
+            calificacion_promedio: empresa.calificacion_promedio,
+            logo_url: logoUrl.value
           })
         })
       }
     }
+
+    // Disparar evento storage de forma artificial para sincronizar navbars
+    window.dispatchEvent(new Event('storage'))
 
     esError.value = false
     mensajeEstado.value = '¡Cambios guardados con éxito!'
@@ -208,10 +239,6 @@ const guardarCambios = async () => {
   } finally {
     cargando.value = false
   }
-}
-
-const actualizarLogoSimulado = () => {
-  alert('Funcionalidad de actualización de logo simulada con éxito.')
 }
 
 onMounted(() => {

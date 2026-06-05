@@ -30,27 +30,28 @@ export const getEmpresaByCalificacion = async (calificacion) => {
 };
 
 export const createEmpresa = async (data) => {
-    const { nombre, descripcion, ubicacion, sitio_web, calificacion_promedio } = data;
+    const { nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, logo_url } = data;
     const result = await pool.query(`
-        INSERT INTO empresas (nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, fecha_creacion)
-        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+        INSERT INTO empresas (nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, logo_url, fecha_creacion)
+        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
         RETURNING *
-    `, [nombre, descripcion, ubicacion, sitio_web, calificacion_promedio || 0]);
+    `, [nombre, descripcion, ubicacion, sitio_web, calificacion_promedio || 0, logo_url || null]);
     return result.rows[0];
 };
 
 export const updateEmpresa = async (id, data) => {
-    const { nombre, descripcion, ubicacion, sitio_web, calificacion_promedio } = data;
+    const { nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, logo_url } = data;
     const result = await pool.query(`
         UPDATE empresas 
         SET nombre = COALESCE($1, nombre),
             descripcion = COALESCE($2, descripcion),
             ubicacion = COALESCE($3, ubicacion),
             sitio_web = COALESCE($4, sitio_web),
-            calificacion_promedio = COALESCE($5, calificacion_promedio)
-        WHERE id_empresa = $6
+            calificacion_promedio = COALESCE($5, calificacion_promedio),
+            logo_url = COALESCE($6, logo_url)
+        WHERE id_empresa = $7
         RETURNING *
-    `, [nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, id]);
+    `, [nombre, descripcion, ubicacion, sitio_web, calificacion_promedio, logo_url, id]);
     return result.rows[0];
 };
 

@@ -1,5 +1,13 @@
 <template>
-  <router-link :to="'/vacantes/detalle/' + vacante.id_vacante" class="job-card" style="display: flex; text-decoration: none; color: inherit;">
+  <router-link :to="'/vacantes/detalle/' + vacante.id_vacante" class="job-card" style="display: flex; text-decoration: none; color: inherit; align-items: center;">
+    <!-- Logo de la empresa -->
+    <div style="margin-right: 20px; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; background: #f8fafc; flex-shrink: 0;">
+      <img v-if="vacante.empresa_logo_url" :src="vacante.empresa_logo_url" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+      <div v-else :style="{ backgroundColor: logoColor, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.9rem' }">
+        {{ logoInitials }}
+      </div>
+    </div>
+
     <div class="job-header-info" style="flex: 1;">
       <h4 style="margin-bottom: 15px; font-size: 1.1rem; font-weight: bold; color: #333;">{{ vacante.titulo || '—' }}</h4>
       <p style="margin-bottom: 10px; color: #555; display: flex; align-items: center; gap: 8px;">
@@ -32,6 +40,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { generarLogo, generarColor } from '../utils/empresaUtils'
 
 const props = defineProps({
   vacante: {
@@ -39,6 +48,9 @@ const props = defineProps({
     required: true
   }
 })
+
+const logoInitials = computed(() => generarLogo(props.vacante.empresa_nombre || 'Empresa'))
+const logoColor = computed(() => generarColor(props.vacante.empresa_nombre || 'Empresa'))
 
 const yaAplicado = computed(() => {
   const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')

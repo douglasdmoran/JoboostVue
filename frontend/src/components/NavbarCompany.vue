@@ -18,8 +18,9 @@
     </div>
     
     <div class="header-right" @click="toggleDropdown" style="cursor: pointer; position: relative;">
-      <div class="avatar-circle" style="border: 2px solid #2ecc71; display: flex; align-items: center; justify-content: center; font-weight: bold; background: #e0fdf4; color: #166534;">
-        {{ usuario && usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'E' }}
+      <div class="avatar-circle" style="border: 2px solid #2ecc71; display: flex; align-items: center; justify-content: center; font-weight: bold; background: #e0fdf4; color: #166534; overflow: hidden; width: 40px; height: 40px; border-radius: 50%;">
+        <img v-if="logoUrl" :src="logoUrl" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;" />
+        <span v-else>{{ usuario && usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'E' }}</span>
       </div>
       <span class="user-label">{{ primerNombre }}</span>
 
@@ -34,9 +35,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getEmpresaData } from '../utils/empresaUtils'
 
 const router = useRouter()
 const usuario = ref(null)
+const logoUrl = ref('')
 const showDropdown = ref(false)
 
 const primerNombre = computed(() => {
@@ -44,16 +47,24 @@ const primerNombre = computed(() => {
   return usuario.value.nombre.split(' ')[0]
 })
 
-const checkSession = () => {
+const checkSession = async () => {
   const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
   if (userJson) {
     try {
       usuario.value = JSON.parse(userJson)
+      const empData = await getEmpresaData()
+      if (empData && empData.logo_url) {
+        logoUrl.value = empData.logo_url
+      } else {
+        logoUrl.value = ''
+      }
     } catch (e) {
       usuario.value = null
+      logoUrl.value = ''
     }
   } else {
     usuario.value = null
+    logoUrl.value = ''
   }
 }
 

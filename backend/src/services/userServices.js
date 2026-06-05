@@ -11,17 +11,17 @@ export const getUserByCorreo = async (correo) => {
     return result.rows[0];
 };
 
-export const createUser = async (nombre, email, contrasenia, rol = 'postulante') => {
+export const createUser = async (nombre, email, contrasenia, rol = 'postulante', foto_url = null) => {
     const result = await pool.query(`
-        INSERT INTO usuarios (nombre, correo, contrasena, rol, fecha_registro)
-        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+        INSERT INTO usuarios (nombre, correo, contrasena, rol, foto_url, fecha_registro)
+        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
         RETURNING *
-    `, [nombre, email, contrasenia, rol]);
+    `, [nombre, email, contrasenia, rol, foto_url]);
     
     return result.rows[0];
 };
 
-export const updateUser = async (id, nombre, email, contrasenia, rol) => {
+export const updateUser = async (id, nombre, email, contrasenia, rol, foto_url) => {
     let query = `UPDATE usuarios SET nombre = COALESCE($1, nombre), correo = COALESCE($2, correo)`;
     let values = [nombre, email];
     let paramIndex = 3;
@@ -35,6 +35,12 @@ export const updateUser = async (id, nombre, email, contrasenia, rol) => {
     if (contrasenia) {
         query += `, contrasena = $${paramIndex}`;
         values.push(contrasenia);
+        paramIndex++;
+    }
+
+    if (foto_url !== undefined) {
+        query += `, foto_url = $${paramIndex}`;
+        values.push(foto_url);
         paramIndex++;
     }
 
