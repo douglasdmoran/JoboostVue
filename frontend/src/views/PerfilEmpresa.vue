@@ -12,34 +12,36 @@
           </div>
           
           <form @submit.prevent="guardarCambios" class="config-form">
-            <div class="form-group">
-              <label class="form-label">
-                <i class="fa-solid fa-user-tie"></i>
-                Nombre del Administrador
-              </label>
-              <input 
-                type="text" 
-                v-model="adminNombre" 
-                placeholder="Ej. Irving Orellana" 
-                class="form-input"
-                required
-              >
-              <span class="form-hint">Nombre completo del responsable de la cuenta</span>
-            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-user-tie"></i>
+                  Nombre del Administrador
+                </label>
+                <input 
+                  type="text" 
+                  v-model="adminNombre" 
+                  placeholder="Ej. Irving Orellana" 
+                  class="form-input"
+                  required
+                >
+                <span class="form-hint">Nombre completo del responsable de la cuenta</span>
+              </div>
 
-            <div class="form-group">
-              <label class="form-label">
-                <i class="fa-solid fa-phone"></i>
-                Teléfono de Oficina
-              </label>
-              <input 
-                type="tel" 
-                v-model="telOficina" 
-                placeholder="2400-0000" 
-                class="form-input"
-                required
-              >
-              <span class="form-hint">Número de contacto para los candidatos</span>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-phone"></i>
+                  Teléfono de Oficina
+                </label>
+                <input 
+                  type="tel" 
+                  v-model="telOficina" 
+                  placeholder="2400-0000" 
+                  class="form-input"
+                  required
+                >
+                <span class="form-hint">Número de contacto para los candidatos</span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -56,18 +58,40 @@
               <span class="form-hint">Correo para consultas y soporte técnico</span>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">
-                <i class="fa-solid fa-lock"></i>
-                Contraseña Actual
-              </label>
-              <input 
-                type="password" 
-                v-model="password" 
-                placeholder="••••••••" 
-                class="form-input"
-              >
-              <span class="form-hint">Ingresa tu contraseña actual para confirmar cambios</span>
+            <div class="form-section-divider">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Seguridad y Contraseña</span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-key"></i>
+                  Nueva Contraseña (Opcional)
+                </label>
+                <input 
+                  type="password" 
+                  v-model="passwordNueva" 
+                  placeholder="••••••••" 
+                  class="form-input"
+                >
+                <span class="form-hint">Solo si deseas cambiar tu contraseña actual</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-lock"></i>
+                  Contraseña Actual *
+                </label>
+                <input 
+                  type="password" 
+                  v-model="passwordActual" 
+                  placeholder="••••••••" 
+                  class="form-input"
+                  required
+                >
+                <span class="form-hint">Ingresa tu contraseña actual para confirmar y guardar cualquier cambio</span>
+              </div>
             </div>
 
             <div v-if="mensajeEstado" class="status-message" :class="{ 'status-error': esError, 'status-success': !esError && mensajeEstado.includes('éxito') }">
@@ -147,7 +171,8 @@ const router = useRouter()
 const adminNombre = ref('')
 const telOficina = ref('')
 const emailSoporte = ref('')
-const password = ref('')
+const passwordActual = ref('')
+const passwordNueva = ref('')
 
 const logoTexto = ref('DIANA')
 const logoColor = ref('#e30613')
@@ -231,21 +256,46 @@ const cargarDatos = async () => {
 }
 
 const guardarCambios = async () => {
+  if (!passwordActual.value) {
+    esError.value = true
+    mensajeEstado.value = 'Por favor, ingresa tu contraseña actual para confirmar los cambios.'
+    return
+  }
+
   cargando.value = true
   esError.value = false
-  mensajeEstado.value = 'Guardando cambios...'
+  mensajeEstado.value = 'Verificando credenciales...'
 
   try {
     const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
     const user = JSON.parse(userJson)
+    const originalEmail = user.correo || user.email
+
+    // 1. Verificar contraseña actual con el endpoint de login
+    const verifyRes = await fetch("http://localhost:3000/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: originalEmail,
+        contrasenia: passwordActual.value,
+      }),
+    })
+
+    if (!verifyRes.ok) {
+      throw new Error('La contraseña actual es incorrecta. No se pueden guardar los cambios.')
+    }
+
+    mensajeEstado.value = 'Guardando cambios...'
     
     const userBody = {
       nombre: adminNombre.value.trim(),
       email: user.correo || user.email,
       rol: 'empresa'
     }
-    if (password.value) {
-      userBody.contrasenia = password.value
+    if (passwordNueva.value) {
+      userBody.contrasenia = passwordNueva.value
     }
 
     const resUser = await fetch(`http://localhost:3000/users/${idUsuario}`, {
@@ -293,7 +343,8 @@ const guardarCambios = async () => {
 
     esError.value = false
     mensajeEstado.value = '¡Cambios guardados con éxito!'
-    password.value = ''
+    passwordActual.value = ''
+    passwordNueva.value = ''
     setTimeout(() => {
       mensajeEstado.value = ''
     }, 3000)
@@ -374,6 +425,28 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 15px 0;
+  color: #764ba2;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 2px solid #f0f3ff;
+  padding-bottom: 8px;
+}
+
+.form-section-divider i {
+  color: #667eea;
 }
 
 .form-label {
@@ -685,6 +758,11 @@ onMounted(() => {
   
   .btn-save {
     width: 100%;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
   
   .verification-benefits {
