@@ -51,7 +51,7 @@
             <div v-if="activeTab === 'tab-empresa'" id="tab-empresa" class="tab-content-admin" style="display: block;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
                     <div style="flex: 1; padding-right: 40px;">
-                        <h4 style="color: #666; margin-bottom: 10px;">¿Cómo es trabajar en {{ logoTexto }}?</h4>
+                        <h4 style="color: #666; margin-bottom: 10px;">¿Cómo es trabajar en {{ nombreEmpresa }}?</h4>
                         <p style="line-height: 1.6; color: #444; white-space: pre-wrap;">{{ textoCultura }}</p>
                     </div>
                     <button class="btn-edit" @click="editarCultura" style="font-weight: bold; cursor: pointer; background: none; border: none; color: #333; display: flex; align-items: center; gap: 5px;">
@@ -255,7 +255,7 @@ const guardarCulturaProposito = async () => {
 }
 
 const editarCultura = () => {
-  const nuevoText = prompt(`Edita el contenido de ¿Cómo es trabajar en ${logoTexto.value}?`, textoCultura.value)
+  const nuevoText = prompt(`Edita el contenido de ¿Cómo es trabajar en ${nombreEmpresa.value}?`, textoCultura.value)
   if (nuevoText !== null && nuevoText.trim() !== '') {
     textoCultura.value = nuevoText.trim()
     guardarCulturaProposito()
