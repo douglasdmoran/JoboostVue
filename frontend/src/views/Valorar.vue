@@ -33,10 +33,12 @@
           </div>
           <div class="company-info">
             <h3 style="font-weight: bold; color: #333;">{{ company.nombre }}</h3>
-            <div class="stars-yellow">
-              <i v-for="n in 5" :key="n" :class="getStarClass(n, parseFloat(company.calificacion_promedio || 0))"></i>
+            <div class="stars-yellow" v-if="parseFloat(company.calificacion_promedio || 0) > 0">
+              <i v-for="n in 5" :key="n" :class="getStarClass(n, parseFloat(company.calificacion_promedio || 0))" style="color: #ffcc00; margin-right: 2px;"></i>
+              <strong style="color: #333; margin-left: 5px; font-size: 0.9rem;">{{ parseFloat(company.calificacion_promedio).toFixed(1) }}</strong>
             </div>
-            <small>{{ company.ubicacion || 'Sin ubicación' }}</small>
+            <p v-else style="color: #888; font-size: 0.85rem; margin: 5px 0 8px 0;">Sin valoraciones aún</p>
+            <small style="color: #666; font-size: 0.85rem;"><i class="fa-solid fa-location-dot" style="margin-right: 4px;"></i>{{ company.ubicacion || 'Sin ubicación' }}</small>
           </div>
         </article>
 

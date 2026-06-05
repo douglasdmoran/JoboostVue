@@ -12,14 +12,11 @@
         <div class="banner-details">
           <h2 style="font-size: 2rem; font-weight: bold; color: #333; margin-bottom: 5px;">{{ companyData.nombre }}</h2>
           <p style="color: #666; margin-bottom: 5px;">{{ companyData.rubro }}</p>
-          <div class="stars-yellow">
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star-half-stroke"></i>
-            <strong style="color: #333; margin-left: 10px;">4.5</strong>
+          <div class="stars-yellow" v-if="promedioCalificacion > 0">
+            <i v-for="n in 5" :key="n" :class="getStarClass(n, promedioCalificacion)" style="color: #ffcc00; margin-right: 2px;"></i>
+            <strong style="color: #333; margin-left: 10px;">{{ promedioCalificacion.toFixed(1) }}</strong>
           </div>
+          <p v-else style="color: #888; font-size: 0.9rem; margin: 5px 0 0 0;">Sin valoraciones aún</p>
         </div>
       </section>
 
@@ -151,6 +148,22 @@ const estadoEvaluacion = ref('')
 
 const listaOfertas = ref([])
 const listaEvaluaciones = ref([])
+
+const promedioCalificacion = computed(() => {
+  if (listaEvaluaciones.value.length === 0) return 0
+  const total = listaEvaluaciones.value.reduce((sum, item) => sum + item.calificacion, 0)
+  return parseFloat((total / listaEvaluaciones.value.length).toFixed(1))
+})
+
+const getStarClass = (n, stars) => {
+  if (n <= Math.floor(stars)) {
+    return 'fa-solid fa-star'
+  } else if (n - 0.5 === stars) {
+    return 'fa-solid fa-star-half-stroke'
+  } else {
+    return 'fa-regular fa-star'
+  }
+}
 
 const companyKey = computed(() => {
   return route.params.key || route.query.empresa || 'diana'

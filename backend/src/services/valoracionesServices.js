@@ -36,6 +36,14 @@ export const createValoracion = async (data) => {
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *
     `, [id_usuario, id_empresa, calificacion, comentario, fecha_valoracion || new Date()]);
+
+    // Recalcular y actualizar calificacion_promedio en empresas
+    await pool.query(`
+        UPDATE empresas 
+        SET calificacion_promedio = COALESCE((SELECT ROUND(AVG(calificacion), 1) FROM valoraciones_empresa WHERE id_empresa = $1), 0)
+        WHERE id_empresa = $1
+    `, [id_empresa]);
+
     return result.rows[0];
 };
 
@@ -49,6 +57,16 @@ export const updateValoracion = async (id, data) => {
         WHERE id_valoracion = $4
         RETURNING *
     `, [calificacion, comentario, fecha_valoracion, id]);
+
+    if (result.rows[0]) {
+        const id_empresa = result.rows[0].id_empresa;
+        await pool.query(`
+            UPDATE empresas 
+            SET calificacion_promedio = COALESCE((SELECT ROUND(AVG(calificacion), 1) FROM valoraciones_empresa WHERE id_empresa = $1), 0)
+            WHERE id_empresa = $1
+        `, [id_empresa]);
+    }
+
     return result.rows[0];
 };
 
@@ -57,5 +75,15 @@ export const deleteValoracion = async (id) => {
         'DELETE FROM valoraciones_empresa WHERE id_valoracion = $1 RETURNING *',
         [id]
     );
+
+    if (result.rows[0]) {
+        const id_empresa = result.rows[0].id_empresa;
+        await pool.query(`
+            UPDATE empresas 
+            SET calificacion_promedio = COALESCE((SELECT ROUND(AVG(calificacion), 1) FROM valoraciones_empresa WHERE id_empresa = $1), 0)
+            WHERE id_empresa = $1
+        `, [id_empresa]);
+    }
+
     return result.rows[0];
 };

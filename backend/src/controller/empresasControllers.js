@@ -43,6 +43,13 @@ export const postCrearEmpresa = async (req, res, next) => {
             error.statusCode = 400;
             throw error;
         }
+        
+        // Evitar duplicados por coincidencia exacta de nombre
+        const empresaExistente = await empresasService.getEmpresaByNombreExacto(req.body.nombre);
+        if (empresaExistente) {
+            return res.status(200).json(empresaExistente);
+        }
+
         const nuevaEmpresa = await empresasService.createEmpresa(req.body);
         res.status(201).json(nuevaEmpresa);
     } catch (err) {

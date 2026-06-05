@@ -13,6 +13,14 @@ export const getEmpresaByNombre = async (nombre) => {
     return result.rows;
 };
 
+export const getEmpresaByNombreExacto = async (nombre) => {
+    const result = await pool.query(
+        'SELECT * FROM empresas WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))',
+        [nombre]
+    );
+    return result.rows[0];
+};
+
 export const getEmpresaByUbicacion = async (ubicacion) => {
     const result = await pool.query(
         'SELECT * FROM empresas WHERE ubicacion ILIKE $1 ORDER BY nombre',
