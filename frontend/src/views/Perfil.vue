@@ -14,20 +14,58 @@
             </div>
             
             <form @submit.prevent="guardarCambios" class="profile-form">
-              <div class="form-group">
-                <label class="form-label">
-                  <i class="fa-solid fa-user"></i>
-                  Nombre Completo
-                </label>
-                <input type="text" v-model="nombre" class="form-input" required>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fa-solid fa-user"></i>
+                    Nombre Completo
+                  </label>
+                  <input type="text" v-model="nombre" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fa-solid fa-envelope"></i>
+                    Correo Electrónico
+                  </label>
+                  <input type="email" v-model="correo" class="form-input" required>
+                </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">
-                  <i class="fa-solid fa-envelope"></i>
-                  Correo Electrónico
-                </label>
-                <input type="email" v-model="correo" class="form-input" required>
+              <div class="form-section-divider">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Seguridad y Contraseña</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fa-solid fa-key"></i>
+                    Nueva Contraseña (Opcional)
+                  </label>
+                  <input 
+                    type="password" 
+                    v-model="passwordNueva" 
+                    placeholder="••••••••" 
+                    class="form-input"
+                  >
+                  <span class="form-hint">Solo si deseas cambiar tu contraseña actual</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fa-solid fa-lock"></i>
+                    Contraseña Actual *
+                  </label>
+                  <input 
+                    type="password" 
+                    v-model="passwordActual" 
+                    placeholder="••••••••" 
+                    class="form-input"
+                    required
+                  >
+                  <span class="form-hint">Ingresa tu contraseña actual para confirmar y guardar cualquier cambio</span>
+                </div>
               </div>
 
               <button type="submit" class="btn-save">
@@ -251,6 +289,8 @@ const nombre = ref('')
 const correo = ref('')
 const idUsuario = ref(null)
 const fotoUrl = ref('')
+const passwordActual = ref('')
+const passwordNueva = ref('')
 const fileInputRef = ref(null)
 
 const misPostulaciones = ref([])
@@ -339,17 +379,47 @@ const formatearFecha = (iso) => {
 }
 
 const guardarCambios = async () => {
+  if (!passwordActual.value) {
+    alert('Por favor, ingresa tu contraseña actual para confirmar los cambios.')
+    return
+  }
+
   try {
+    const userJson = localStorage.getItem('usuario') || localStorage.getItem('currentUser')
+    const user = JSON.parse(userJson)
+    const originalEmail = user.correo || user.email
+
+    // 1. Verificar contraseña actual con el endpoint de login
+    const verifyRes = await fetch("http://localhost:3000/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: originalEmail,
+        contrasenia: passwordActual.value,
+      }),
+    })
+
+    if (!verifyRes.ok) {
+      throw new Error('La contraseña actual es incorrecta. No se pueden guardar los cambios.')
+    }
+
+    const bodyObj = {
+      nombre: nombre.value.trim(),
+      email: correo.value.trim(),
+      foto_url: fotoUrl.value
+    }
+    if (passwordNueva.value) {
+      bodyObj.contrasenia = passwordNueva.value
+    }
+
     const response = await fetch(`http://localhost:3000/users/${idUsuario.value}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        nombre: nombre.value.trim(),
-        email: correo.value.trim(),
-        foto_url: fotoUrl.value
-      })
+      body: JSON.stringify(bodyObj)
     })
 
     if (!response.ok) {
@@ -364,6 +434,8 @@ const guardarCambios = async () => {
     window.dispatchEvent(new Event('storage'))
 
     alert('¡Información de perfil actualizada con éxito!')
+    passwordActual.value = ''
+    passwordNueva.value = ''
     checkSession()
   } catch (err) {
     alert(err.message)
@@ -533,6 +605,28 @@ onMounted(() => {
   gap: 8px;
 }
 
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 15px 0;
+  color: #764ba2;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-bottom: 2px solid #f0f3ff;
+  padding-bottom: 8px;
+}
+
+.form-section-divider i {
+  color: #667eea;
+}
+
 .form-label {
   display: flex;
   align-items: center;
@@ -558,6 +652,12 @@ onMounted(() => {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-hint {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: -4px;
 }
 
 .btn-save {
@@ -1043,6 +1143,11 @@ onMounted(() => {
   .btn-save {
     width: 100%;
     justify-content: center;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 }
 </style>
