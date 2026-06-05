@@ -1,55 +1,97 @@
 <template>
-  <div>
+  <div class="requests-page">
     <NavbarCompany />
     
-    <main class="container">
-        <h1 style="text-align: center; font-size: 2rem; font-weight: bold; margin-bottom: 40px;">Solicitudes recibidas</h1>
+    <main class="requests-main">
+      <div class="requests-header">
+        <h1 class="requests-title">Solicitudes Recibidas</h1>
+        <p class="requests-subtitle">Gestiona las postulaciones de los candidatos a tus vacantes</p>
+      </div>
 
-        <section class="requests-list">
-            
-            <article 
-              v-for="solicitud in listaSolicitudes" 
-              :key="solicitud.id_postulacion"
-              class="job-card" 
-              style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; padding: 30px; background: white; border: 1px solid #eee; margin-bottom: 25px;"
-            >
-                <div class="candidate-info" style="flex: 1;">
-                    <h4 style="font-size: 1.1rem; margin-bottom: 15px; font-weight: bold; color: #333;">{{ solicitud.usuario_nombre }}</h4>
-                    <p style="margin-bottom: 10px; color: #555;"><i class="fa-solid fa-location-dot"></i> {{ solicitud.ubicacion || 'San Salvador, El Salvador' }}</p>
-                    <p style="color: #555;"><i class="fa-solid fa-briefcase"></i> {{ solicitud.tipo_contrato_label || 'Tiempo completo' }}</p>
-                    <p style="color: #666; font-size: 0.85rem; margin-top: 10px;">Postulación para: <strong>{{ solicitud.vacante_titulo }}</strong></p>
+      <section class="requests-list">
+        
+        <article 
+          v-for="solicitud in listaSolicitudes" 
+          :key="solicitud.id_postulacion"
+          class="request-card"
+        >
+          <div class="request-header">
+            <div class="candidate-avatar">
+              <i class="fa-solid fa-user-circle"></i>
+            </div>
+            <div class="candidate-basic-info">
+              <h4 class="candidate-name">{{ solicitud.usuario_nombre }}</h4>
+              <div class="candidate-details">
+                <span class="detail-item">
+                  <i class="fa-solid fa-location-dot"></i>
+                  {{ solicitud.ubicacion || 'San Salvador, El Salvador' }}
+                </span>
+                <span class="detail-item">
+                  <i class="fa-solid fa-briefcase"></i>
+                  {{ solicitud.tipo_contrato_label || 'Tiempo completo' }}
+                </span>
+              </div>
+            </div>
+            <div class="vacancy-badge">
+              <i class="fa-solid fa-tag"></i>
+              {{ solicitud.vacante_titulo }}
+            </div>
+          </div>
+
+          <div class="request-body">
+            <div class="functions-section">
+              <h5 class="section-subtitle">
+                <i class="fa-solid fa-file-alt"></i>
+                Descripción del Puesto
+              </h5>
+              <p class="functions-text">{{ solicitud.vacante_descripcion }}</p>
+            </div>
+
+            <div class="actions-section">
+              <div v-if="solicitud.estado === 'postulado'" class="action-buttons">
+                <button 
+                  @click="actualizarEstado(solicitud.id_postulacion, 'aceptado')" 
+                  class="btn-accept"
+                >
+                  <i class="fa-solid fa-check-circle"></i>
+                  Aceptar Solicitud
+                </button>
+                <button 
+                  @click="actualizarEstado(solicitud.id_postulacion, 'denegado')" 
+                  class="btn-reject"
+                >
+                  <i class="fa-solid fa-times-circle"></i>
+                  Denegar Solicitud
+                </button>
+              </div>
+              
+              <div v-else class="status-container">
+                <div 
+                  class="status-badge"
+                  :class="solicitud.estado === 'aceptado' ? 'status-accepted' : 'status-rejected'"
+                >
+                  <i :class="solicitud.estado === 'aceptado' ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"></i>
+                  {{ solicitud.estado === 'aceptado' ? 'Solicitud Aceptada' : 'Solicitud Denegada' }}
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <div class="candidate-functions" style="flex: 2; text-align: center; padding: 0 20px; border-left: 1px solid #eee;">
-                    <h4 style="font-weight: bold; margin-bottom: 15px; color: #333;">Funciones de la Vacante</h4>
-                    <p style="font-size: 0.9rem; color: #444; line-height: 1.5; margin-bottom: 20px; text-align: left;">
-                        {{ solicitud.vacante_descripcion }}
-                    </p>
-                    
-                    <div v-if="solicitud.estado === 'postulado'" class="action-buttons" style="display: flex; justify-content: center; gap: 20px;">
-                        <button @click="actualizarEstado(solicitud.id_postulacion, 'aceptado')" class="btn-primary" style="background-color: #00ff00; color: white; border: none; padding: 10px 35px; border-radius: 4px; font-weight: bold; cursor: pointer;">Aceptar</button>
-                        <button @click="actualizarEstado(solicitud.id_postulacion, 'denegado')" class="btn-primary" style="background-color: #ff0000; color: white; border: none; padding: 10px 35px; border-radius: 4px; font-weight: bold; cursor: pointer;">Denegar</button>
-                    </div>
-                    
-                    <div v-else style="margin-top: 15px;">
-                      <span 
-                        :style="{ 
-                          backgroundColor: solicitud.estado === 'aceptado' ? '#dcfce7' : '#fee2e2', 
-                          color: solicitud.estado === 'aceptado' ? '#166534' : '#dc2626' 
-                        }" 
-                        style="padding: 10px 40px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; font-size: 0.9rem;"
-                      >
-                        {{ solicitud.estado === 'aceptado' ? 'Solicitud Aceptada' : 'Solicitud Denegada' }}
-                      </span>
-                    </div>
-                </div>
-            </article>
+          <div class="request-footer">
+            <small class="request-date">
+              <i class="fa-regular fa-calendar"></i>
+              Postulación recibida
+            </small>
+          </div>
+        </article>
 
-            <p v-if="listaSolicitudes.length === 0" style="color: #888; text-align: center; padding: 50px; font-size: 1.1rem;">
-              No se han recibido solicitudes para tus vacantes en este momento.
-            </p>
+        <div v-if="listaSolicitudes.length === 0" class="empty-state">
+          <i class="fa-solid fa-inbox"></i>
+          <p>No se han recibido solicitudes para tus vacantes en este momento</p>
+          <small>Las postulaciones aparecerán aquí cuando los candidatos apliquen a tus ofertas</small>
+        </div>
 
-        </section>
+      </section>
     </main>
   </div>
 </template>
@@ -72,7 +114,6 @@ const cargarSolicitudes = async () => {
   }
 
   try {
-    // 1. Cargar todas las vacantes de la empresa
     const resVac = await fetch('http://localhost:3000/vacantes')
     if (!resVac.ok) throw new Error('Error al cargar vacantes')
     const vacantes = await resVac.json()
@@ -83,15 +124,12 @@ const cargarSolicitudes = async () => {
       vacantesMap[v.id_vacante] = v
     })
 
-    // 2. Cargar todas las postulaciones
     const resPost = await fetch('http://localhost:3000/postulaciones')
     if (!resPost.ok) throw new Error('Error al cargar postulaciones')
     const postulaciones = await resPost.json()
     
-    // Filtrar postulaciones que pertenezcan a mis vacantes
     const misPostulaciones = postulaciones.filter(p => misVacantesIds.includes(p.id_vacante))
 
-    // 3. Cargar todos los usuarios para obtener los nombres de los postulantes
     const resUsers = await fetch('http://localhost:3000/users')
     if (!resUsers.ok) throw new Error('Error al cargar usuarios')
     const usuarios = await resUsers.json()
@@ -100,7 +138,6 @@ const cargarSolicitudes = async () => {
       usuariosMap[u.id_usuario] = u
     })
 
-    // 4. Cruzar datos
     listaSolicitudes.value = misPostulaciones.map(p => {
       const v = vacantesMap[p.id_vacante] || {}
       const u = usuariosMap[p.id_usuario] || {}
@@ -161,4 +198,352 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.requests-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8faff 100%);
+}
+
+.requests-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.requests-header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.requests-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 12px 0;
+}
+
+.requests-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.request-card {
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eef2f6;
+  flex-wrap: wrap;
+}
+
+.candidate-avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.candidate-avatar i {
+  font-size: 2rem;
+  color: #667eea;
+}
+
+.candidate-basic-info {
+  flex: 1;
+}
+
+.candidate-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.candidate-details {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.detail-item i {
+  color: #667eea;
+}
+
+.vacancy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f3ff;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.request-body {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.functions-section {
+  flex: 2;
+}
+
+.section-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-subtitle i {
+  color: #667eea;
+}
+
+.functions-text {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.actions-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-accept, .btn-reject {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-accept {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-accept:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-reject {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-reject:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.status-container {
+  text-align: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-accepted {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.request-footer {
+  text-align: right;
+  padding-top: 15px;
+  border-top: 1px solid #eef2f6;
+}
+
+.request-date {
+  color: #999;
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.empty-state i {
+  font-size: 3.5rem;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.empty-state small {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .requests-main {
+    padding: 20px 15px;
+  }
+  
+  .requests-title {
+    font-size: 1.5rem;
+  }
+  
+  .requests-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .request-card {
+    padding: 20px;
+  }
+  
+  .request-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .candidate-details {
+    justify-content: center;
+  }
+  
+  .request-body {
+    flex-direction: column;
+  }
+  
+  .action-buttons {
+    width: 100%;
+  }
+  
+  .btn-accept, .btn-reject {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .vacancy-badge {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .candidate-name {
+    font-size: 1rem;
+  }
+  
+  .detail-item {
+    font-size: 0.75rem;
+  }
+  
+  .functions-text {
+    font-size: 0.8rem;
+  }
+  
+  .btn-accept, .btn-reject {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+  
+  .status-badge {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+}
 </style>

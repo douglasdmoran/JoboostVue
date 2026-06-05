@@ -1,156 +1,241 @@
 <template>
-  <div>
+  <div class="profile-page">
     <NavbarCandidate />
     
-    <main class="container profile-layout">
-      <!-- Columna Izquierda: Formulario e Historiales -->
-      <section class="form-side" style="display: flex; flex-direction: column; gap: 40px;">
-        <div>
-          <h1 style="font-size: 2.2rem; font-weight: bold; color: #333; margin-bottom: 10px;">Configuración de Perfil</h1>
-          <p style="color: #666; margin-bottom: 25px;">Administra tus datos de contacto y credenciales.</p>
-          
-          <form @submit.prevent="guardarCambios" class="profile-form" style="display: flex; flex-direction: column; gap: 15px;">
-            <div class="input-group">
-              <label for="nombre">Nombre Completo</label>
-              <input type="text" v-model="nombre" id="nombre" required>
+    <main class="profile-main">
+      <div class="profile-layout">
+        <!-- Columna Izquierda: Formulario e Historiales -->
+        <div class="profile-content">
+          <!-- Configuración de Perfil -->
+          <div class="profile-section">
+            <div class="section-header">
+              <h1 class="section-title">Configuración de Perfil</h1>
+              <p class="section-subtitle">Administra tus datos de contacto y credenciales</p>
             </div>
-
-            <div class="input-group">
-              <label for="correo">Correo Electrónico</label>
-              <input type="email" v-model="correo" id="correo" required>
-            </div>
-
-            <button type="submit" class="btn-primary" style="align-self: flex-start; cursor: pointer;">
-              Guardar Cambios de Cuenta
-            </button>
-          </form>
-        </div>
-
-        <!-- Trabajos Aplicados -->
-        <div>
-          <h2 style="font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-            Trabajos Aplicados
-          </h2>
-          <div id="perfil-postulaciones-lista" style="display: flex; flex-direction: column; gap: 20px;">
-            <div 
-              v-for="post in misPostulaciones" 
-              :key="post.id_postulacion" 
-              class="job-card" 
-              style="display: block; text-decoration: none; color: inherit; padding: 25px;"
-            >
-              <div class="job-header-info">
-                <h4 style="color: #333; font-weight: bold;">{{ post.vacante_titulo || 'Cargando título de vacante...' }}</h4>
-                <p style="color: #666;"><i class="fa-solid fa-location-dot"></i> {{ post.vacante_ubicacion || '—' }}</p>
-                <p style="color: #666;"><i class="fa-solid fa-building"></i> {{ post.empresa_nombre || '—' }}</p>
+            
+            <form @submit.prevent="guardarCambios" class="profile-form">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-user"></i>
+                  Nombre Completo
+                </label>
+                <input type="text" v-model="nombre" class="form-input" required>
               </div>
-              <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; background: #e0e7ff; color: #4338ca; text-transform: capitalize; font-weight: bold;">
-                  Estado: {{ post.estado || 'postulado' }}
-                </span>
-                <small style="color: #999;">{{ formatearFecha(post.fecha_postulacion) }}</small>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fa-solid fa-envelope"></i>
+                  Correo Electrónico
+                </label>
+                <input type="email" v-model="correo" class="form-input" required>
+              </div>
+
+              <button type="submit" class="btn-save">
+                <i class="fa-solid fa-save"></i>
+                Guardar Cambios de Cuenta
+              </button>
+            </form>
+          </div>
+
+          <!-- Trabajos Aplicados -->
+          <div class="profile-section">
+            <div class="section-header">
+              <h2 class="section-subtitle">
+                <i class="fa-solid fa-briefcase"></i>
+                Trabajos Aplicados
+              </h2>
+              <span class="section-count">{{ misPostulaciones.length }} aplicación(es)</span>
+            </div>
+            
+            <div class="applications-list">
+              <div 
+                v-for="post in misPostulaciones" 
+                :key="post.id_postulacion" 
+                class="application-card"
+              >
+                <div class="application-header">
+                  <h4 class="application-title">{{ post.vacante_titulo || 'Cargando título...' }}</h4>
+                  <span class="application-status" :class="getStatusClass(post.estado)">
+                    <i class="fa-solid" :class="getStatusIcon(post.estado)"></i>
+                    Estado: {{ post.estado || 'postulado' }}
+                  </span>
+                </div>
+                <div class="application-details">
+                  <span class="detail-item">
+                    <i class="fa-solid fa-location-dot"></i>
+                    {{ post.vacante_ubicacion || 'Ubicación no especificada' }}
+                  </span>
+                  <span class="detail-item">
+                    <i class="fa-solid fa-building"></i>
+                    {{ post.empresa_nombre || 'Empresa no especificada' }}
+                  </span>
+                </div>
+                <div class="application-footer">
+                  <small class="application-date">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ formatearFecha(post.fecha_postulacion) }}
+                  </small>
+                </div>
+              </div>
+              
+              <div v-if="misPostulaciones.length === 0" class="empty-state">
+                <i class="fa-solid fa-briefcase-slash"></i>
+                <p>Aún no has aplicado a ninguna vacante</p>
+                <small>Explora las oportunidades y comienza tu camino profesional</small>
               </div>
             </div>
-            <p v-if="misPostulaciones.length === 0" style="color: #888;">
-              Aún no has aplicado a ninguna vacante.
-            </p>
           </div>
-        </div>
 
-        <!-- Mis Foros -->
-        <div>
-          <h2 style="font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-            Mis Foros Creados
-          </h2>
-          <div id="perfil-foros-lista" style="display: flex; flex-direction: column; gap: 20px;">
-            <router-link 
-              v-for="foro in misForos" 
-              :key="foro.id_foro" 
-              :to="'/foros/detalle/' + foro.id_foro" 
-              class="forum-box" 
-              style="text-decoration: none; display: block; color: inherit; padding: 20px;"
-            >
-              <p style="font-size: 1.2rem; color: #333; margin: 0 0 8px; font-weight: bold;">{{ foro.titulo || '—' }}</p>
-              <small style="color: #aaa;"><i class="fa-solid fa-calendar"></i> {{ formatearFecha(foro.fecha_creacion) }}</small>
-              <span v-if="foro.cerrado" style="margin-left: 10px; font-size: 0.75rem; background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 999px; font-weight: bold;">
-                Cerrado
-              </span>
-            </router-link>
-            <p v-if="misForos.length === 0" style="color: #888;">
-              Aún no has creado ningún foro.
-            </p>
+          <!-- Mis Foros -->
+          <div class="profile-section">
+            <div class="section-header">
+              <h2 class="section-subtitle">
+                <i class="fa-solid fa-comments"></i>
+                Mis Foros Creados
+              </h2>
+              <span class="section-count">{{ misForos.length }} foro(s)</span>
+            </div>
+            
+            <div class="forums-list">
+              <router-link 
+                v-for="foro in misForos" 
+                :key="foro.id_foro" 
+                :to="'/foros/detalle/' + foro.id_foro" 
+                class="forum-card"
+              >
+                <div class="forum-header">
+                  <h4 class="forum-title">{{ foro.titulo || 'Sin título' }}</h4>
+                  <span v-if="foro.cerrado" class="forum-badge closed">
+                    <i class="fa-solid fa-lock"></i>
+                    Cerrado
+                  </span>
+                  <span v-else class="forum-badge open">
+                    <i class="fa-solid fa-message"></i>
+                    Activo
+                  </span>
+                </div>
+                <div class="forum-footer">
+                  <small class="forum-date">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ formatearFecha(foro.fecha_creacion) }}
+                  </small>
+                </div>
+              </router-link>
+              
+              <div v-if="misForos.length === 0" class="empty-state">
+                <i class="fa-solid fa-comment-slash"></i>
+                <p>Aún no has creado ningún foro</p>
+                <small>Comparte tus dudas y experiencias con la comunidad</small>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Mis Comentarios -->
-        <div>
-          <h2 style="font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-            Comentarios en Foros
-          </h2>
-          <div id="perfil-comentarios-lista" style="display: flex; flex-direction: column; gap: 15px;">
-            <div 
-              v-for="com in misComentarios" 
-              :key="com.id_comentario" 
-              style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #eaeaea;"
-            >
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center;">
-                <strong style="color: var(--azul-jobboost);">
-                  <router-link :to="'/foros/detalle/' + com.id_foro" style="color: inherit; text-decoration: none;">
-                    <i class="fa-solid fa-comments"></i> {{ com.foro_titulo || 'Ir al Foro' }}
+          <!-- Mis Comentarios -->
+          <div class="profile-section">
+            <div class="section-header">
+              <h2 class="section-subtitle">
+                <i class="fa-solid fa-reply-all"></i>
+                Comentarios en Foros
+              </h2>
+              <span class="section-count">{{ misComentarios.length }} comentario(s)</span>
+            </div>
+            
+            <div class="comments-list">
+              <div 
+                v-for="com in misComentarios" 
+                :key="com.id_comentario" 
+                class="comment-card"
+              >
+                <div class="comment-header">
+                  <router-link :to="'/foros/detalle/' + com.id_foro" class="comment-link">
+                    <i class="fa-solid fa-comments"></i>
+                    {{ com.foro_titulo || 'Ver Conversación' }}
                   </router-link>
-                </strong>
-                <span style="color: #888; font-size: 0.9rem;">{{ formatearFecha(com.fecha_comentario) }}</span>
+                  <small class="comment-date">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ formatearFecha(com.fecha_comentario) }}
+                  </small>
+                </div>
+                <div class="comment-content">
+                  <i class="fa-solid fa-quote-left quote-icon"></i>
+                  <p>{{ com.mensaje }}</p>
+                </div>
               </div>
-              <p style="margin: 0; color: #444; white-space: pre-line;">"{{ com.mensaje }}"</p>
+              
+              <div v-if="misComentarios.length === 0" class="empty-state">
+                <i class="fa-regular fa-comment-dots"></i>
+                <p>No has realizado comentarios en ningún foro</p>
+                <small>Participa en las discusiones de la comunidad</small>
+              </div>
             </div>
-            <p v-if="misComentarios.length === 0" style="color: #888;">
-              No has realizado comentarios en ningún foro.
-            </p>
+          </div>
+
+          <!-- Mis Evaluaciones -->
+          <div class="profile-section">
+            <div class="section-header">
+              <h2 class="section-subtitle">
+                <i class="fa-solid fa-star"></i>
+                Evaluaciones Publicadas
+              </h2>
+              <span class="section-count">{{ misEvaluaciones.length }} evaluación(es)</span>
+            </div>
+            
+            <div class="reviews-list">
+              <div 
+                v-for="val in misEvaluaciones" 
+                :key="val.id_valoracion" 
+                class="review-card"
+              >
+                <div class="review-header">
+                  <div class="review-company">
+                    <i class="fa-solid fa-building"></i>
+                    <strong>{{ val.empresa_nombre || 'Empresa' }}</strong>
+                  </div>
+                  <small class="review-date">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ formatearFecha(val.fecha_valoracion) }}
+                  </small>
+                </div>
+                <div class="review-stars">
+                  <i v-for="n in 5" :key="n" :class="n <= val.calificacion ? 'fa-solid fa-star' : 'fa-regular fa-star'" class="star-icon"></i>
+                </div>
+                <div class="review-content">
+                  <i class="fa-solid fa-quote-left quote-icon"></i>
+                  <p>{{ val.comentario }}</p>
+                </div>
+              </div>
+              
+              <div v-if="misEvaluaciones.length === 0" class="empty-state">
+                <i class="fa-regular fa-star"></i>
+                <p>No has publicado ninguna evaluación a empresas</p>
+                <small>Comparte tu experiencia laboral con otros candidatos</small>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Mis Evaluaciones -->
-        <div>
-          <h2 style="font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-            Evaluaciones Publicadas
-          </h2>
-          <div id="perfil-evaluaciones-lista" style="display: flex; flex-direction: column; gap: 15px;">
-            <div 
-              v-for="val in misEvaluaciones" 
-              :key="val.id_valoracion" 
-              style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-direction: column; gap: 10px;"
-            >
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: var(--azul-jobboost); font-size: 1.1rem;">
-                  <i class="fa-solid fa-building"></i> {{ val.empresa_nombre || 'Empresa' }}
-                </strong>
-                <span style="color: #999; font-size: 0.85rem;">{{ formatearFecha(val.fecha_valoracion) }}</span>
+        <!-- Columna Derecha: Foto de Perfil -->
+        <div class="profile-sidebar">
+          <div class="avatar-section">
+            <h3 class="avatar-title">
+              <i class="fa-solid fa-camera"></i>
+              Foto de Perfil
+            </h3>
+            <div class="avatar-container">
+              <div class="avatar-circle">
+                <img v-if="fotoUrl" :src="fotoUrl" alt="Foto de perfil" />
+                <span v-else class="avatar-initials">{{ iniciales }}</span>
               </div>
-              <div>
-                <i v-for="n in 5" :key="n" :class="n <= val.calificacion ? 'fa-solid fa-star' : 'fa-regular fa-star'" style="color: #ffcc00; margin-right: 2px;"></i>
-              </div>
-              <p style="margin: 0; color: #444; font-size: 0.95rem; line-height: 1.5; font-style: italic;">"{{ val.comentario }}"</p>
             </div>
-            <p v-if="misEvaluaciones.length === 0" style="color: #888;">
-              No has publicado ninguna evaluación a empresas.
-            </p>
+            <input type="file" ref="fileInputRef" @change="handlePhotoUpload" accept="image/*" style="display: none;">
+            <button @click="triggerFileInput" type="button" class="btn-upload">
+              <i class="fa-solid fa-upload"></i>
+              Actualizar Foto
+            </button>
+            <p class="upload-hint">Formatos permitidos: JPG, PNG (Máx. 2MB)</p>
           </div>
         </div>
-      </section>
-
-      <!-- Columna Derecha: Foto de Perfil -->
-      <section class="image-side">
-        <div class="img-placeholder-container" style="text-align: center;">
-          <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #1e293b;">Foto de Perfil</h3>
-          <div class="img-placeholder-box" style="display: flex; align-items: center; justify-content: center; width: 200px; height: 200px; border-radius: 50%; margin: 0 auto 20px; border: 1px solid #ccc; overflow: hidden; background: #e2e8f0;">
-            <img v-if="fotoUrl" :src="fotoUrl" alt="Foto de perfil" style="width: 100%; height: 100%; object-fit: cover;" />
-            <span v-else style="font-size: 4rem; color: #aaa;">{{ iniciales }}</span>
-          </div>
-          <input type="file" ref="fileInputRef" @change="handlePhotoUpload" accept="image/*" style="display: none;">
-          <button @click="triggerFileInput" type="button" class="btn-secondary" style="cursor: pointer;">
-            <i class="fa-solid fa-upload"></i> Actualizar Foto
-          </button>
-        </div>
-      </section>
+      </div>
     </main>
   </div>
 </template>
@@ -181,6 +266,28 @@ const iniciales = computed(() => {
   }
   return parts[0].charAt(0).toUpperCase()
 })
+
+const getStatusClass = (estado) => {
+  const statusMap = {
+    'postulado': 'status-postulado',
+    'revisado': 'status-revisado',
+    'entrevista': 'status-entrevista',
+    'rechazado': 'status-rechazado',
+    'contratado': 'status-contratado'
+  }
+  return statusMap[estado?.toLowerCase()] || 'status-postulado'
+}
+
+const getStatusIcon = (estado) => {
+  const iconMap = {
+    'postulado': 'fa-hourglass-half',
+    'revisado': 'fa-eye',
+    'entrevista': 'fa-calendar-check',
+    'rechazado': 'fa-times-circle',
+    'contratado': 'fa-check-circle'
+  }
+  return iconMap[estado?.toLowerCase()] || 'fa-hourglass-half'
+}
 
 const triggerFileInput = () => {
   if (fileInputRef.value) {
@@ -254,7 +361,6 @@ const guardarCambios = async () => {
     localStorage.setItem('usuario', JSON.stringify(updatedUser))
     localStorage.setItem('currentUser', JSON.stringify(updatedUser))
     
-    // Disparar evento storage de forma artificial para sincronizar navbars
     window.dispatchEvent(new Event('storage'))
 
     alert('¡Información de perfil actualizada con éxito!')
@@ -271,7 +377,6 @@ const cargarPostulaciones = async () => {
     const todas = await resPost.json()
     const filtradas = todas.filter(p => p.id_usuario === idUsuario.value)
     
-    // Obtener información adicional de las vacantes correspondientes
     const resVac = await fetch('http://localhost:3000/vacantes')
     if (resVac.ok) {
       const vacantes = await resVac.json()
@@ -335,4 +440,609 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.profile-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8faff 100%);
+}
+
+.profile-main {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 40px;
+}
+
+/* Profile Content */
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.profile-section {
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.profile-section:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eef2f6;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-subtitle i {
+  color: #667eea;
+}
+
+.section-count {
+  background: #f0f3ff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* Profile Form */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.form-label i {
+  color: #667eea;
+}
+
+.form-input {
+  padding: 12px 15px;
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Application Cards */
+.applications-list,
+.forums-list,
+.comments-list,
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.application-card {
+  background: #fafbfc;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.application-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.application-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.application-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.status-postulado {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.status-revisado {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-entrevista {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.status-rechazado {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-contratado {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.application-details {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.detail-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.detail-item i {
+  color: #667eea;
+}
+
+.application-footer {
+  text-align: right;
+}
+
+.application-date {
+  color: #999;
+  font-size: 0.7rem;
+}
+
+/* Forum Cards */
+.forum-card {
+  display: block;
+  text-decoration: none;
+  background: #fafbfc;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.forum-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.forum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.forum-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.forum-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.forum-badge.closed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.forum-badge.open {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.forum-footer {
+  text-align: right;
+}
+
+.forum-date {
+  color: #999;
+  font-size: 0.7rem;
+}
+
+/* Comment Cards */
+.comment-card {
+  background: #fafbfc;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.comment-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.comment-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-link:hover {
+  text-decoration: underline;
+}
+
+.comment-date {
+  color: #999;
+  font-size: 0.7rem;
+}
+
+.comment-content {
+  position: relative;
+  padding-left: 25px;
+}
+
+.comment-content .quote-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #667eea;
+  opacity: 0.4;
+  font-size: 0.8rem;
+}
+
+.comment-content p {
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+/* Review Cards */
+.review-card {
+  background: #fafbfc;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.review-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.review-company {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #667eea;
+  font-size: 0.9rem;
+}
+
+.review-date {
+  color: #999;
+  font-size: 0.7rem;
+}
+
+.review-stars {
+  margin-bottom: 12px;
+}
+
+.star-icon {
+  color: #ffcc00;
+  margin-right: 2px;
+  font-size: 0.85rem;
+}
+
+.review-content {
+  position: relative;
+  padding-left: 25px;
+}
+
+.review-content .quote-icon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #667eea;
+  opacity: 0.4;
+  font-size: 0.8rem;
+}
+
+.review-content p {
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Profile Sidebar */
+.profile-sidebar {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.avatar-section {
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.avatar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.avatar-title i {
+  color: #667eea;
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar-circle {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  border: 4px solid white;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-upload {
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+}
+
+.btn-upload:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.upload-hint {
+  font-size: 0.7rem;
+  color: #999;
+  margin: 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-state i {
+  font-size: 2.5rem;
+  color: #ddd;
+  margin-bottom: 15px;
+}
+
+.empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+}
+
+.empty-state small {
+  font-size: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .profile-sidebar {
+    position: static;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-main {
+    padding: 20px 15px;
+  }
+  
+  .profile-section {
+    padding: 20px;
+  }
+  
+  .section-title {
+    font-size: 1.4rem;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+  }
+  
+  .application-header,
+  .forum-header,
+  .comment-header,
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .application-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .avatar-circle {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .avatar-initials {
+    font-size: 2.5rem;
+  }
+  
+  .btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

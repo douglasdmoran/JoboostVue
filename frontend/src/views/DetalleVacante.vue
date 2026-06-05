@@ -1,57 +1,72 @@
 <template>
-  <div>
+  <div class="vacancy-detail-page">
     <NavbarCandidate />
     
-    <main class="container">
-      <section class="vacancy-detail-card" style="text-align: center;">
-        <div style="background: white; padding: 50px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <main class="vacancy-main">
+      <section class="vacancy-detail-section">
+        <div class="vacancy-card">
           
-          <h1 id="detalle-titulo" style="font-size: 2.2rem; color: #333; font-weight: bold; margin-bottom: 15px;">
-            {{ vacante ? vacante.titulo : 'Cargando...' }}
-          </h1>
-          
-          <div style="margin-top: 15px; color: #666; font-size: 1.1rem; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;" id="detalle-metadata">
-            <template v-if="vacante">
-              <p><i class="fa-solid fa-location-dot"></i> <strong>Ubicación:</strong> {{ vacante.ubicacion || 'N/A' }}</p>
-              <p><i class="fa-solid fa-briefcase"></i> <strong>Contrato:</strong> {{ vacante.tipo_contrato || 'N/A' }}</p>
-              <p><i class="fa-solid fa-building"></i> <strong>Modalidad:</strong> {{ vacante.modalidad || 'N/A' }}</p>
-            </template>
-          </div>
-
-          <hr style="width: 100px; margin: 30px auto; border: 2px solid var(--azul-jobboost); border-radius: 2px; opacity: 1;">
-
-          <div class="functions-content">
-            <h2 style="margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #333;">Descripción y Requisitos</h2>
-            <p id="detalle-descripcion" style="max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem; color: #555; line-height: 1.8; white-space: pre-wrap; text-align: left;">
-              {{ vacante ? vacante.descripcion || 'Sin descripción detallada.' : 'Cargando información...' }}
-            </p>
-          </div>
-
-          <div class="action-area">
-            <button 
-              v-if="!aplicado" 
-              id="btn-aplicar-vacante" 
-              class="btn-primary" 
-              @click="aplicarVacante" 
-              :disabled="cargando"
-              style="padding: 15px 60px; font-size: 1.1rem; cursor: pointer;"
-            >
-              {{ cargando ? 'Aplicando...' : 'Aplicar a esta vacante' }}
-            </button>
-            <div v-else>
-              <div 
-                style="padding: 15px 30px; font-size: 1.1rem; color: #27ae60; font-weight: bold; background-color: #e8f8f0; border: 1px solid #27ae60; border-radius: 8px; display: inline-block; margin-bottom: 10px;"
-              >
-                <i class="fa-solid fa-circle-check"></i> Ya has aplicado a este empleo
+          <div class="vacancy-header">
+            <h1 class="vacancy-title">
+              {{ vacante ? vacante.titulo : 'Cargando...' }}
+            </h1>
+            
+            <div class="vacancy-meta" v-if="vacante">
+              <div class="meta-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span><strong>Ubicación:</strong> {{ vacante.ubicacion || 'No especificada' }}</span>
               </div>
-              <p v-if="recienAplicado" style="color: #666; font-size: 0.95rem; margin-top: 8px; font-style: italic;">
+              <div class="meta-item">
+                <i class="fa-solid fa-briefcase"></i>
+                <span><strong>Contrato:</strong> {{ vacante.tipo_contrato || 'No especificado' }}</span>
+              </div>
+              <div class="meta-item">
+                <i class="fa-solid fa-building"></i>
+                <span><strong>Modalidad:</strong> {{ vacante.modalidad || 'No especificada' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="vacancy-divider"></div>
+
+          <div class="vacancy-description">
+            <div class="description-header">
+              <i class="fa-solid fa-file-alt"></i>
+              <h2>Descripción y Requisitos</h2>
+            </div>
+            <div class="description-content">
+              <p>{{ vacante ? vacante.descripcion || 'Sin descripción detallada.' : 'Cargando información...' }}</p>
+            </div>
+          </div>
+
+          <div class="vacancy-actions">
+            <div v-if="!aplicado" class="action-button-wrapper">
+              <button 
+                id="btn-aplicar-vacante" 
+                class="btn-apply" 
+                @click="aplicarVacante" 
+                :disabled="cargando"
+              >
+                <i class="fa-solid" :class="cargando ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                {{ cargando ? 'Procesando...' : 'Aplicar a esta vacante' }}
+              </button>
+            </div>
+            
+            <div v-else class="applied-success">
+              <div class="applied-badge">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>¡Ya has aplicado a este empleo!</span>
+              </div>
+              <p v-if="recienAplicado" class="redirect-message">
+                <i class="fa-solid fa-hourglass-half"></i>
                 Redirigiendo al listado de vacantes...
               </p>
             </div>
             
-            <div style="margin-top: 25px;">
-              <router-link to="/vacantes" style="text-decoration: none; color: #666; font-size: 0.9rem;">
-                <i class="fa-solid fa-arrow-left"></i> Volver al listado
+            <div class="back-link">
+              <router-link to="/vacantes" class="back-button">
+                <i class="fa-solid fa-arrow-left"></i>
+                Volver al listado
               </router-link>
             </div>
           </div>
@@ -224,4 +239,334 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.vacancy-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8faff 100%);
+}
+
+.vacancy-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+
+.vacancy-detail-section {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vacancy-card {
+  background: white;
+  border-radius: 24px;
+  padding: 50px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.vacancy-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+/* Header */
+.vacancy-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.vacancy-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 20px 0;
+  line-height: 1.3;
+}
+
+.vacancy-meta {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 0.95rem;
+  background: #f8f9fa;
+  padding: 6px 15px;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.meta-item:hover {
+  background: #f0f3ff;
+  transform: translateY(-2px);
+}
+
+.meta-item i {
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.meta-item strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Divider */
+.vacancy-divider {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  margin: 35px auto;
+  border-radius: 2px;
+}
+
+/* Description */
+.vacancy-description {
+  margin-bottom: 40px;
+}
+
+.description-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.description-header i {
+  font-size: 1.8rem;
+  color: #667eea;
+}
+
+.description-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.description-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.description-content p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #555;
+  text-align: left;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* Actions */
+.vacancy-actions {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.action-button-wrapper {
+  margin-bottom: 25px;
+}
+
+.btn-apply {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 14px 48px;
+  border-radius: 50px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-apply:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-apply:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-apply:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Applied Success */
+.applied-success {
+  margin-bottom: 25px;
+}
+
+.applied-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #e8f8f0 0%, #d4f5e6 100%);
+  border: 2px solid #27ae60;
+  border-radius: 60px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #27ae60;
+  margin-bottom: 12px;
+  animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.applied-badge i {
+  font-size: 1.3rem;
+}
+
+.redirect-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 0.85rem;
+  background: #f8f9fa;
+  padding: 8px 20px;
+  border-radius: 20px;
+  margin: 0;
+}
+
+.redirect-message i {
+  color: #f39c12;
+}
+
+/* Back Link */
+.back-link {
+  margin-top: 20px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  color: #667eea;
+  background: #f0f3ff;
+  transform: translateX(-5px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vacancy-main {
+    padding: 30px 15px;
+  }
+  
+  .vacancy-card {
+    padding: 30px 25px;
+  }
+  
+  .vacancy-title {
+    font-size: 1.6rem;
+  }
+  
+  .vacancy-meta {
+    gap: 12px;
+  }
+  
+  .meta-item {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+  }
+  
+  .description-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .description-header i {
+    font-size: 1.4rem;
+  }
+  
+  .btn-apply {
+    padding: 12px 35px;
+    font-size: 0.95rem;
+  }
+  
+  .applied-badge {
+    padding: 12px 25px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .vacancy-card {
+    padding: 20px;
+  }
+  
+  .vacancy-title {
+    font-size: 1.3rem;
+  }
+  
+  .vacancy-meta {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .meta-item {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .description-content p {
+    font-size: 0.9rem;
+  }
+  
+  .btn-apply {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+  
+  .applied-badge {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>
