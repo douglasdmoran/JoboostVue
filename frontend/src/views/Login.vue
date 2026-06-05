@@ -49,9 +49,6 @@
           ¿No tienes cuenta?
           <router-link to="/registro" class="link">Regístrate aquí</router-link>
         </p>
-        <p>
-          <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-        </p>
       </footer>
     </div>
   </main>

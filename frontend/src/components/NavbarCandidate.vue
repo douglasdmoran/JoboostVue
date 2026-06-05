@@ -1,7 +1,7 @@
 <template>
   <header class="main-header">
     <div class="header-left">
-      <router-link to="/inicio" class="logo">
+      <router-link to="/" class="logo">
         <span class="logo-dot">●</span> JobBoost
       </router-link>
     </div>
@@ -100,7 +100,7 @@ const closeDropdownOnClickOutside = () => {
 };
 
 const irALogin = () => {
-  router.push("/");
+  router.push("/login");
 };
 
 const irARegistro = () => {

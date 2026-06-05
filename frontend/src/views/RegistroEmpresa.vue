@@ -155,7 +155,7 @@
       </form>
 
       <footer class="register-footer">
-        <p>¿Ya tienes cuenta? <router-link to="/">Inicia sesión aquí</router-link></p>
+        <p>¿Ya tienes cuenta? <router-link to="/login">Inicia sesión aquí</router-link></p>
       </footer>
     </div>
   </main>
@@ -235,7 +235,7 @@ const registrarEmpresa = async () => {
     esError.value = false
     mensajeEstado.value = '¡Empresa registrada con éxito! Redirigiendo...'
     setTimeout(() => {
-      router.push('/')
+      router.push('/login')
     }, 2000)
   } catch (err) {
     console.error(err)

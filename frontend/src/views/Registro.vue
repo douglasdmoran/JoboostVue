@@ -158,7 +158,7 @@
       </form>
 
       <footer class="register-footer">
-        <p>¿Ya tienes una cuenta? <router-link to="/">Inicia sesión aquí</router-link></p>
+        <p>¿Ya tienes una cuenta? <router-link to="/login">Inicia sesión aquí</router-link></p>
       </footer>
 
     </div>
@@ -240,7 +240,7 @@ const crearCuenta = async () => {
 
       esError.value = false
       mensajeEstado.value = '¡Empresa registrada con éxito! Redirigiendo...'
-      setTimeout(() => router.push('/'), 2000)
+      setTimeout(() => router.push('/login'), 2000)
 
     } else {
       // Registro normal de postulante
@@ -263,7 +263,7 @@ const crearCuenta = async () => {
 
       esError.value = false
       mensajeEstado.value = '¡Registro exitoso! Redirigiendo...'
-      setTimeout(() => router.push('/'), 2000)
+      setTimeout(() => router.push('/login'), 2000)
     }
   } catch (err) {
     esError.value = true

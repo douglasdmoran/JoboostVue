@@ -33,7 +33,8 @@ import EstadoVacantes from './views/EstadoVacantes.vue'
 
 // 2. Definimos las rutas
 const routes = [
-  { path: '/', component: Login },
+  { path: '/', component: Inicio },
+  { path: '/login', component: Login },
   { path: '/registro', component: Registro },
   { path: '/registro-empresa', component: RegistroEmpresa },
   
